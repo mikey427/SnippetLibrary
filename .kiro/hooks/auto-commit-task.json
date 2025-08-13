@@ -1,0 +1,18 @@
+{
+  "name": "Auto Commit on Task Completion",
+  "description": "Automatically commits changes when a task is marked as completed in any tasks.md file",
+  "trigger": {
+    "type": "file_change",
+    "patterns": ["**/*tasks.md"],
+    "conditions": {
+      "content_contains": "- [x]"
+    }
+  },
+  "enabled": true,
+  "actions": [
+    {
+      "type": "agent_execution",
+      "prompt": "A task has been marked as completed in a tasks.md file. Please:\n\n1. Read the tasks.md file that was modified to identify which task was just completed\n2. Look for the task that was recently changed from [ ] to [x] \n3. Extract the task number and title from the completed task\n4. Check git status to see what files have been changed\n5. If there are changes to commit:\n   - Stage all changes with 'git add .'\n   - Create a commit with this format: 'feat: Complete task [number] - [brief title]'\n   - In the commit body, include:\n     * The full task description\n     * List of files that were modified\n     * Any relevant requirements that were addressed\n\n6. If there are no changes to commit (just the checkbox), create a commit for the task completion itself\n\nExample commit message:\n```\nfeat: Complete task 1.1 - Set up project structure and core interfaces\n\n- Created VS Code extension project structure with package.json and tsconfig\n- Defined TypeScript interfaces for Snippet, SearchQuery, and StorageConfig\n- Set up shared core library structure for business logic\n\nFiles modified:\n- package.json\n- tsconfig.json\n- src/interfaces/\n\nRequirements addressed: 1.1, 1.2, 1.3, 1.4\n```\n\nAlways commit something - either the code changes or at minimum the task completion."
+    }
+  ]
+}

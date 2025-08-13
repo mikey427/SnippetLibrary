@@ -1,0 +1,107 @@
+{
+  "name": "snippet-library",
+  "displayName": "Snippet Library",
+  "description": "A developer productivity tool for managing reusable code snippets",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Snippets",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "snippetLibrary.saveSnippet",
+        "title": "Save as Snippet",
+        "category": "Snippet Library"
+      },
+      {
+        "command": "snippetLibrary.insertSnippet",
+        "title": "Insert Snippet",
+        "category": "Snippet Library"
+      },
+      {
+        "command": "snippetLibrary.manageSnippets",
+        "title": "Manage Snippets",
+        "category": "Snippet Library"
+      },
+      {
+        "command": "snippetLibrary.openWebGUI",
+        "title": "Open Web GUI",
+        "category": "Snippet Library"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "snippetLibrary.saveSnippet",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "snippetLibrary.insertSnippet",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i"
+      }
+    ],
+    "configuration": {
+      "title": "Snippet Library",
+      "properties": {
+        "snippetLibrary.storageLocation": {
+          "type": "string",
+          "enum": [
+            "workspace",
+            "global"
+          ],
+          "default": "global",
+          "description": "Where to store snippets"
+        },
+        "snippetLibrary.storageFormat": {
+          "type": "string",
+          "enum": [
+            "json",
+            "yaml"
+          ],
+          "default": "json",
+          "description": "File format for snippet storage"
+        },
+        "snippetLibrary.autoBackup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically backup snippets"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "ts-loader": "^9.4.1"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
