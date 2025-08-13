@@ -7,7 +7,7 @@
   - Set up shared core library structure for business logic
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 2. Implement core data models and validation
+- [x] 2. Implement core data models and validation
 
   - Create Snippet class with validation methods for title, code, language, and tags
   - Implement SearchQuery class with query building and validation
