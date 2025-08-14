@@ -21,6 +21,7 @@
     ".vscode-test",
     "out",
     "dist",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "**/*.test.ts"
   ]
 }

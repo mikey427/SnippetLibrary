@@ -28,7 +28,9 @@ export class Snippet implements ISnippet {
     // Validate the data before creating the snippet
     const validation = validateSnippetData(data);
     if (!validation.success) {
-      throw new Error(`Invalid snippet data: ${validation.error.message}`);
+      throw new Error(
+        `Invalid snippet data: ${(validation as any).error.message}`
+      );
     }
 
     this.id = id || generateId();
@@ -75,7 +77,7 @@ export class Snippet implements ISnippet {
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error,
+        error: (validation as any).error,
       };
     }
 
@@ -151,7 +153,7 @@ export class Snippet implements ISnippet {
       this.code.toLowerCase().includes(text) ||
       this.language.toLowerCase().includes(text) ||
       this.tags.some((tag) => tag.toLowerCase().includes(text)) ||
-      (this.category && this.category.toLowerCase().includes(text))
+      (this.category ? this.category.toLowerCase().includes(text) : false)
     );
   }
 

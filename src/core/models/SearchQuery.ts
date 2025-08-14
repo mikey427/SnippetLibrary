@@ -21,7 +21,9 @@ export class SearchQuery implements ISearchQuery {
     // Validate the query before creating
     const validation = validateSearchQuery(query);
     if (!validation.success) {
-      throw new Error(`Invalid search query: ${validation.error.message}`);
+      throw new Error(
+        `Invalid search query: ${(validation as any).error.message}`
+      );
     }
 
     this.text = query.text;
@@ -91,7 +93,7 @@ export class SearchQuery implements ISearchQuery {
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error,
+        error: (validation as any).error,
       };
     }
 
@@ -109,7 +111,7 @@ export class SearchQuery implements ISearchQuery {
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error,
+        error: (validation as any).error,
       };
     }
 
@@ -127,7 +129,7 @@ export class SearchQuery implements ISearchQuery {
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error,
+        error: (validation as any).error,
       };
     }
 
@@ -145,7 +147,7 @@ export class SearchQuery implements ISearchQuery {
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error,
+        error: (validation as any).error,
       };
     }
 
@@ -176,7 +178,7 @@ export class SearchQuery implements ISearchQuery {
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error,
+        error: (validation as any).error,
       };
     }
 
@@ -198,7 +200,7 @@ export class SearchQuery implements ISearchQuery {
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error,
+        error: (validation as any).error,
       };
     }
 

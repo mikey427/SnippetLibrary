@@ -104,5 +104,5 @@ export function arraysEqual<T>(a: T[], b: T[]): boolean {
  * Remove duplicates from an array
  */
 export function removeDuplicates<T>(array: T[]): T[] {
-  return [...new Set(array)];
+  return Array.from(new Set(array));
 }

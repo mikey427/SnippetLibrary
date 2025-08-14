@@ -24,13 +24,14 @@
   - Write unit tests for storage operations with temporary files
   - _Requirements: 7.1, 7.2, 8.1, 8.2, 8.3_
 
-- [ ] 4. Create snippet manager core business logic
+- [x] 4. Create snippet manager core business logic
 
   - Implement SnippetManager interface with CRUD operations
   - Add search and filtering logic with multiple criteria support
   - Create snippet validation and error handling
   - Implement usage tracking and statistics
   - Write comprehensive unit tests for all business logic
+  - **Commit all snippet manager implementation files to version control**
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 3.1, 3.2, 4.1, 4.2, 10.1_
 
 - [ ] 5. Build VS Code extension host
@@ -40,6 +41,7 @@
   - Implement Command Palette integration for snippet insertion
   - Add keybinding registration and configuration
   - Write integration tests with mocked VS Code API
+  - **Commit all VS Code extension host files to version control**
   - _Requirements: 2.1, 2.2, 9.1, 9.2, 15.1_
 
 - [ ] 6. Implement VS Code snippet integration
@@ -49,6 +51,7 @@
   - Add IntelliSense integration for snippet suggestions
   - Create prefix-based snippet triggering
   - Write tests for VS Code snippet system integration
+  - **Commit all VS Code snippet integration files to version control**
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
 - [ ] 7. Build snippet save and insert functionality
@@ -58,6 +61,7 @@
   - Add snippet preview and selection interface
   - Implement tab stops and placeholder support
   - Write end-to-end tests for save and insert workflows
+  - **Commit all snippet save and insert functionality files to version control**
   - _Requirements: 1.1, 1.2, 2.1, 2.2, 2.3, 2.4_
 
 - [ ] 8. Create search and filtering system
@@ -67,6 +71,7 @@
   - Create search result ranking and sorting
   - Implement search history and suggestions
   - Write performance tests for large snippet collections
+  - **Commit all search and filtering system files to version control**
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
 - [ ] 9. Build import/export functionality
@@ -76,6 +81,7 @@
   - Add selective export by tags and categories
   - Create backup and restore functionality
   - Write tests for import/export with various file formats
+  - **Commit all import/export functionality files to version control**
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
 - [ ] 10. Implement snippet management commands
@@ -85,6 +91,7 @@
   - Add bulk operations for multiple snippet management
   - Create snippet organization and categorization
   - Write tests for all management operations
+  - **Commit all snippet management command files to version control**
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
 - [ ] 11. Set up web GUI server foundation
@@ -94,6 +101,7 @@
   - Add middleware for CORS, body parsing, and error handling
   - Create server lifecycle management (start, stop, restart)
   - Write API integration tests with supertest
+  - **Commit all web GUI server foundation files to version control**
   - _Requirements: 14.1, 14.2, 15.2, 15.3_
 
 - [ ] 12. Build web GUI API layer
@@ -103,6 +111,7 @@
   - Create import/export endpoints with file handling
   - Implement real-time updates via WebSocket or Server-Sent Events
   - Write comprehensive API tests covering all endpoints
+  - **Commit all web GUI API layer files to version control**
   - _Requirements: 11.1, 12.1, 13.1, 14.1_
 
 - [ ] 13. Create React application foundation
@@ -112,6 +121,7 @@
   - Set up state management with Redux Toolkit or Zustand
   - Create base components and styling system
   - Write component unit tests with React Testing Library
+  - **Commit all React application foundation files to version control**
   - _Requirements: 11.1, 11.2_
 
 - [ ] 14. Build snippet grid and visualization
@@ -121,6 +131,7 @@
   - Add drag-and-drop functionality for snippet reordering
   - Create responsive grid layout with filtering controls
   - Write tests for grid interactions and performance
+  - **Commit all snippet grid and visualization files to version control**
   - _Requirements: 11.1, 11.2, 11.3_
 
 - [ ] 15. Implement advanced search interface
@@ -130,6 +141,7 @@
   - Implement search result highlighting and ranking
   - Create saved search functionality
   - Write tests for search interactions and performance
+  - **Commit all advanced search interface files to version control**
   - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
 - [ ] 16. Build bulk operations interface
@@ -139,6 +151,7 @@
   - Add progress indicators for long-running operations
   - Create bulk edit modal with batch operations
   - Write tests for bulk operations and error handling
+  - **Commit all bulk operations interface files to version control**
   - _Requirements: 13.1, 13.2, 13.3, 13.4_
 
 - [ ] 17. Implement snippet editor interface
@@ -148,6 +161,7 @@
   - Implement tag input with autocomplete and suggestions
   - Create preview functionality with live updates
   - Write tests for editor functionality and validation
+  - **Commit all snippet editor interface files to version control**
   - _Requirements: 11.1, 11.2, 4.1, 4.2_
 
 - [ ] 18. Build synchronization system
@@ -157,6 +171,7 @@
   - Add conflict resolution for concurrent modifications
   - Implement automatic refresh and manual sync options
   - Write tests for synchronization scenarios and edge cases
+  - **Commit all synchronization system files to version control**
   - _Requirements: 14.1, 14.2, 14.3, 14.4_
 
 - [ ] 19. Create web GUI launch integration
@@ -166,6 +181,7 @@
   - Create server status monitoring and health checks
   - Implement graceful server shutdown on VS Code exit
   - Write tests for server lifecycle and browser integration
+  - **Commit all web GUI launch integration files to version control**
   - _Requirements: 15.1, 15.2, 15.3, 15.4_
 
 - [ ] 20. Implement error handling and recovery
@@ -175,6 +191,7 @@
   - Implement automatic retry mechanisms for transient failures
   - Create error logging and debugging capabilities
   - Write tests for error scenarios and recovery flows
+  - **Commit all error handling and recovery files to version control**
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
 - [ ] 21. Add configuration and settings
@@ -184,6 +201,7 @@
   - Add keyboard shortcut customization
   - Create web GUI preferences and theming
   - Write tests for configuration management and persistence
+  - **Commit all configuration and settings files to version control**
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 9.1, 9.3_
 
 - [ ] 22. Build comprehensive test suite
@@ -193,6 +211,7 @@
   - Implement performance tests for large snippet collections
   - Create cross-platform compatibility tests
   - Write automated test scripts for CI/CD pipeline
+  - **Commit all comprehensive test suite files to version control**
   - _Requirements: All requirements validation_
 
 - [ ] 23. Package and prepare for distribution
@@ -201,4 +220,5 @@
   - Set up build scripts for both extension and web GUI
   - Create installation and setup documentation
   - Write user guide and API documentation
+  - **Commit all packaging and distribution files to version control**
   - _Requirements: Extension distribution and user onboarding_

@@ -45,7 +45,7 @@ export class SnippetManagerImpl implements SnippetManager {
       if (!loadResult.success) {
         return {
           success: false,
-          error: loadResult.error,
+          error: (loadResult as any).error,
         };
       }
 
@@ -57,7 +57,7 @@ export class SnippetManagerImpl implements SnippetManager {
         // Log warning but don't fail initialization
         console.warn(
           "Failed to set up file watching:",
-          watchResult.error.message
+          (watchResult as any).error.message
         );
       }
 
@@ -124,7 +124,10 @@ export class SnippetManagerImpl implements SnippetManager {
       if (!saveResult.success) {
         // Rollback memory change
         this.snippets.delete(snippet.id);
-        return saveResult;
+        return {
+          success: false,
+          error: (saveResult as any).error,
+        };
       }
 
       return { success: true, data: snippet.toJSON() };
@@ -271,13 +274,19 @@ export class SnippetManagerImpl implements SnippetManager {
       // Update the snippet
       const updateResult = snippet.update(updates);
       if (!updateResult.success) {
-        return updateResult;
+        return {
+          success: false,
+          error: (updateResult as any).error,
+        };
       }
 
       // Save to storage
       const saveResult = await this.saveSnippetsToStorage();
       if (!saveResult.success) {
-        return saveResult;
+        return {
+          success: false,
+          error: (saveResult as any).error,
+        };
       }
 
       return { success: true, data: snippet.toJSON() };
@@ -334,7 +343,10 @@ export class SnippetManagerImpl implements SnippetManager {
       if (!saveResult.success) {
         // Rollback memory change
         this.snippets.set(id, snippet);
-        return saveResult;
+        return {
+          success: false,
+          error: (saveResult as any).error,
+        };
       }
 
       return { success: true, data: true };
@@ -501,7 +513,9 @@ export class SnippetManagerImpl implements SnippetManager {
                   });
                 } else {
                   result.errors.push(
-                    `Failed to overwrite snippet "${snippetData.title}": ${updateResult.error.message}`
+                    `Failed to overwrite snippet "${snippetData.title}": ${
+                      (updateResult as any).error.message
+                    }`
                   );
                 }
                 break;
@@ -532,7 +546,9 @@ export class SnippetManagerImpl implements SnippetManager {
                   });
                 } else {
                   result.errors.push(
-                    `Failed to create renamed snippet "${newTitle}": ${createResult.error.message}`
+                    `Failed to create renamed snippet "${newTitle}": ${
+                      (createResult as any).error.message
+                    }`
                   );
                 }
                 break;
@@ -544,7 +560,9 @@ export class SnippetManagerImpl implements SnippetManager {
               result.imported++;
             } else {
               result.errors.push(
-                `Failed to create snippet "${snippetData.title}": ${createResult.error.message}`
+                `Failed to create snippet "${snippetData.title}": ${
+                  (createResult as any).error.message
+                }`
               );
             }
           }
@@ -684,7 +702,10 @@ export class SnippetManagerImpl implements SnippetManager {
       // Save to storage
       const saveResult = await this.saveSnippetsToStorage();
       if (!saveResult.success) {
-        return saveResult;
+        return {
+          success: false,
+          error: (saveResult as any).error,
+        };
       }
 
       return { success: true, data: undefined };
@@ -1092,7 +1113,10 @@ export class SnippetManagerImpl implements SnippetManager {
     try {
       const loadResult = await this.storageService.loadSnippets();
       if (!loadResult.success) {
-        return loadResult;
+        return {
+          success: false,
+          error: (loadResult as any).error,
+        };
       }
 
       // Clear existing snippets
