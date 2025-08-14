@@ -34,7 +34,7 @@
   - **Commit all snippet manager implementation files to version control**
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 3.1, 3.2, 4.1, 4.2, 10.1_
 
-- [ ] 5. Build VS Code extension host
+- [-] 5. Build VS Code extension host
 
   - Create extension.ts with activation and deactivation lifecycle
   - Register all commands (saveSnippet, insertSnippet, manageSnippets, openWebGUI)

@@ -1,52 +1,47 @@
 import * as vscode from "vscode";
+import { SnippetLibraryExtension } from "./extension/SnippetLibraryExtension";
+
+let extensionInstance: SnippetLibraryExtension | undefined;
 
 /**
  * Extension activation function
  * Called when the extension is activated
  */
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(
+  context: vscode.ExtensionContext
+): Promise<void> {
   console.log("Snippet Library extension is now active");
 
-  // Register placeholder commands - these will be implemented in later tasks
-  const commands = [
-    vscode.commands.registerCommand("snippetLibrary.saveSnippet", () => {
-      vscode.window.showInformationMessage(
-        "Save Snippet command - to be implemented"
-      );
-    }),
+  try {
+    // Create and initialize the extension instance
+    extensionInstance = new SnippetLibraryExtension(context);
+    await extensionInstance.initialize();
 
-    vscode.commands.registerCommand("snippetLibrary.insertSnippet", () => {
-      vscode.window.showInformationMessage(
-        "Insert Snippet command - to be implemented"
-      );
-    }),
-
-    vscode.commands.registerCommand("snippetLibrary.manageSnippets", () => {
-      vscode.window.showInformationMessage(
-        "Manage Snippets command - to be implemented"
-      );
-    }),
-
-    vscode.commands.registerCommand("snippetLibrary.openWebGUI", () => {
-      vscode.window.showInformationMessage(
-        "Open Web GUI command - to be implemented"
-      );
-    }),
-  ];
-
-  // Add all commands to the extension context
-  commands.forEach((command) => context.subscriptions.push(command));
-
-  // Show activation message
-  vscode.window.showInformationMessage(
-    "Snippet Library extension activated successfully!"
-  );
+    console.log("Snippet Library extension initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize Snippet Library extension:", error);
+    vscode.window.showErrorMessage(
+      `Failed to initialize Snippet Library: ${
+        error instanceof Error ? error.message : error
+      }`
+    );
+  }
 }
 
 /**
  * Extension deactivation function
  * Called when the extension is deactivated
  */
-export function deactivate() {
-  console.log("Snippet Library extension is now deactivated");
+export async function deactivate(): Promise<void> {
+  console.log("Snippet Library extension is now deactivating");
+
+  try {
+    if (extensionInstance) {
+      await extensionInstance.dispose();
+      extensionInstance = undefined;
+    }
+    console.log("Snippet Library extension deactivated successfully");
+  } catch (error) {
+    console.error("Error during extension deactivation:", error);
+  }
 }
