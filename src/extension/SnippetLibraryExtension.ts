@@ -96,6 +96,11 @@ export class SnippetLibraryExtension {
       vscode.commands.registerCommand("snippetLibrary.importSnippets", () =>
         this.commandHandler.importSnippets()
       ),
+      // Usage tracking command for snippet completion
+      vscode.commands.registerCommand(
+        "snippetLibrary.trackUsage",
+        (snippetId: string) => this.trackSnippetUsage(snippetId)
+      ),
     ];
 
     // Add all commands to disposables
@@ -195,6 +200,20 @@ export class SnippetLibraryExtension {
    */
   getVSCodeIntegration(): VSCodeSnippetIntegration {
     return this.vscodeIntegration;
+  }
+
+  /**
+   * Track snippet usage when inserted via completion
+   */
+  private async trackSnippetUsage(snippetId: string): Promise<void> {
+    try {
+      const result = await this.snippetManager.incrementUsage(snippetId);
+      if (!result.success) {
+        console.error("Failed to track snippet usage:", result.error.message);
+      }
+    } catch (error) {
+      console.error("Error tracking snippet usage:", error);
+    }
   }
 
   /**
