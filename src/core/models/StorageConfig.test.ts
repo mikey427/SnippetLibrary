@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { StorageConfig } from "./StorageConfig";
-import { StorageConfig as IStorageConfig } from "../../types";
+import { StorageConfigInterface } from "../../types";
 
 describe("StorageConfig", () => {
   describe("constructor", () => {

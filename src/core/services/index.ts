@@ -6,13 +6,13 @@ export { SnippetManagerImpl } from "./SnippetManagerImpl";
 
 // Export factory functions
 import { FileSystemStorageService } from "./FileSystemStorageService";
-import { StorageConfig as IStorageConfig } from "../../types";
+import { StorageConfigInterface } from "../../types";
 
 /**
  * Create a storage service with optional configuration
  */
 export function createStorageService(
-  config?: Partial<IStorageConfig>
+  config?: Partial<StorageConfigInterface>
 ): FileSystemStorageService {
   return new FileSystemStorageService(config);
 }
@@ -23,7 +23,7 @@ export function createStorageService(
 export function createWorkspaceStorageService(
   customPath?: string
 ): FileSystemStorageService {
-  const config: Partial<IStorageConfig> = {
+  const config: Partial<StorageConfigInterface> = {
     location: "workspace",
     format: "json",
     autoBackup: true,

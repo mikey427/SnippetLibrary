@@ -1,7 +1,7 @@
 import {
-  Snippet,
+  SnippetInterface,
   SnippetData,
-  SearchQuery,
+  SearchQueryInterface,
   ImportData,
   ImportResult,
   ExportData,
@@ -16,12 +16,12 @@ export interface SnippetManager {
   /**
    * Create a new snippet
    */
-  createSnippet(snippet: SnippetData): Promise<Result<Snippet>>;
+  createSnippet(snippet: SnippetData): Promise<Result<SnippetInterface>>;
 
   /**
    * Retrieve a snippet by ID
    */
-  getSnippet(id: string): Promise<Result<Snippet | null>>;
+  getSnippet(id: string): Promise<Result<SnippetInterface | null>>;
 
   /**
    * Update an existing snippet
@@ -29,7 +29,7 @@ export interface SnippetManager {
   updateSnippet(
     id: string,
     updates: Partial<SnippetData>
-  ): Promise<Result<Snippet>>;
+  ): Promise<Result<SnippetInterface>>;
 
   /**
    * Delete a snippet by ID
@@ -39,12 +39,14 @@ export interface SnippetManager {
   /**
    * Get all snippets
    */
-  getAllSnippets(): Promise<Result<Snippet[]>>;
+  getAllSnippets(): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Search snippets based on query criteria
    */
-  searchSnippets(query: SearchQuery): Promise<Result<Snippet[]>>;
+  searchSnippets(
+    query: SearchQueryInterface
+  ): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Import snippets from external data
@@ -65,7 +67,11 @@ export interface SnippetManager {
    * Get snippet usage statistics
    */
   getUsageStats(): Promise<
-    Result<{ totalSnippets: number; totalUsage: number; topUsed: Snippet[] }>
+    Result<{
+      totalSnippets: number;
+      totalUsage: number;
+      topUsed: SnippetInterface[];
+    }>
   >;
 
   /**

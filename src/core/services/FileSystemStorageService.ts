@@ -4,12 +4,12 @@ import * as os from "os";
 import * as yaml from "js-yaml";
 import { FSWatcher } from "fs";
 import {
-  Snippet,
+  SnippetInterface,
   StorageLocation,
   StorageChange,
   Result,
   ErrorType,
-  StorageConfig as IStorageConfig,
+  StorageConfigInterface,
   ExportData,
 } from "../../types";
 import { StorageService } from "./StorageService";
@@ -24,14 +24,14 @@ export class FileSystemStorageService implements StorageService {
   private watcher: FSWatcher | null = null;
   private watchCallback: ((changes: StorageChange[]) => void) | null = null;
 
-  constructor(config?: Partial<IStorageConfig>) {
+  constructor(config?: Partial<StorageConfigInterface>) {
     this.config = new StorageConfig(config);
   }
 
   /**
    * Load all snippets from storage
    */
-  async loadSnippets(): Promise<Result<Snippet[]>> {
+  async loadSnippets(): Promise<Result<SnippetInterface[]>> {
     try {
       const filePath = this.getSnippetsFilePath();
 
@@ -56,7 +56,7 @@ export class FileSystemStorageService implements StorageService {
       }
 
       // Handle different data formats
-      let snippets: Snippet[];
+      let snippets: SnippetInterface[];
 
       if (Array.isArray(parsedData)) {
         snippets = parsedData;
@@ -108,7 +108,7 @@ export class FileSystemStorageService implements StorageService {
   /**
    * Save snippets to storage
    */
-  async saveSnippets(snippets: Snippet[]): Promise<Result<void>> {
+  async saveSnippets(snippets: SnippetInterface[]): Promise<Result<void>> {
     try {
       const filePath = this.getSnippetsFilePath();
       const directory = path.dirname(filePath);
@@ -299,7 +299,7 @@ export class FileSystemStorageService implements StorageService {
   /**
    * Get storage configuration
    */
-  getConfig(): IStorageConfig {
+  getConfig(): StorageConfigInterface {
     return this.config.toPlainObject();
   }
 
@@ -307,7 +307,7 @@ export class FileSystemStorageService implements StorageService {
    * Update storage configuration
    */
   async updateConfig(
-    configUpdates: Partial<IStorageConfig>
+    configUpdates: Partial<StorageConfigInterface>
   ): Promise<Result<void>> {
     try {
       const updateResult = this.config.update(configUpdates);
@@ -472,7 +472,9 @@ export class FileSystemStorageService implements StorageService {
   /**
    * Restore from backup
    */
-  async restoreFromBackup(backupPath: string): Promise<Result<Snippet[]>> {
+  async restoreFromBackup(
+    backupPath: string
+  ): Promise<Result<SnippetInterface[]>> {
     try {
       if (!fs.existsSync(backupPath)) {
         return {
@@ -498,7 +500,7 @@ export class FileSystemStorageService implements StorageService {
       }
 
       // Handle different data formats
-      let snippets: Snippet[];
+      let snippets: SnippetInterface[];
 
       if (Array.isArray(parsedData)) {
         snippets = parsedData;
@@ -646,7 +648,7 @@ export class FileSystemStorageService implements StorageService {
       const changes: StorageChange[] = [
         {
           type: "updated",
-          snippet: {} as Snippet, // Placeholder - would need actual change detection
+          snippet: {} as SnippetInterface, // Placeholder - would need actual change detection
           timestamp: new Date(),
         },
       ];

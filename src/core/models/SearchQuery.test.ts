@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { SearchQuery } from "./SearchQuery";
-import { SearchQuery as ISearchQuery } from "../../types";
+import { SearchQueryInterface } from "../../types";
 
 describe("SearchQuery", () => {
   describe("constructor", () => {

@@ -1,9 +1,9 @@
 import {
-  Snippet,
+  SnippetInterface,
   StorageLocation,
   StorageChange,
   Result,
-  StorageConfig as IStorageConfig,
+  StorageConfigInterface,
 } from "../../types";
 
 /**
@@ -13,12 +13,12 @@ export interface StorageService {
   /**
    * Load all snippets from storage
    */
-  loadSnippets(): Promise<Result<Snippet[]>>;
+  loadSnippets(): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Save snippets to storage
    */
-  saveSnippets(snippets: Snippet[]): Promise<Result<void>>;
+  saveSnippets(snippets: SnippetInterface[]): Promise<Result<void>>;
 
   /**
    * Watch for external changes to storage files
@@ -43,12 +43,12 @@ export interface StorageService {
   /**
    * Get storage configuration
    */
-  getConfig(): IStorageConfig;
+  getConfig(): StorageConfigInterface;
 
   /**
    * Update storage configuration
    */
-  updateConfig(config: Partial<IStorageConfig>): Promise<Result<void>>;
+  updateConfig(config: Partial<StorageConfigInterface>): Promise<Result<void>>;
 
   /**
    * Check if storage location exists and is accessible
@@ -68,7 +68,7 @@ export interface StorageService {
   /**
    * Restore from backup
    */
-  restoreFromBackup(backupPath: string): Promise<Result<Snippet[]>>;
+  restoreFromBackup(backupPath: string): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Initialize storage (create directories, default files)

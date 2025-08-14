@@ -1,16 +1,11 @@
-import {
-  Snippet as ISnippet,
-  SnippetData,
-  Result,
-  ErrorType,
-} from "../../types";
+import { SnippetInterface, SnippetData, Result, ErrorType } from "../../types";
 import { generateId, createError } from "../utils";
 import { validateSnippetData } from "../validation";
 
 /**
  * Snippet class with validation methods
  */
-export class Snippet implements ISnippet {
+export class Snippet implements SnippetInterface {
   public readonly id: string;
   public title: string;
   public description: string;
@@ -50,7 +45,7 @@ export class Snippet implements ISnippet {
   /**
    * Create a Snippet instance from existing snippet data (e.g., loaded from storage)
    */
-  static fromExisting(snippet: ISnippet): Snippet {
+  static fromExisting(snippet: SnippetInterface): Snippet {
     const instance = Object.create(Snippet.prototype);
     Object.assign(instance, snippet);
     return instance;
@@ -125,7 +120,7 @@ export class Snippet implements ISnippet {
   /**
    * Convert to plain object (for serialization)
    */
-  toJSON(): ISnippet {
+  toJSON(): SnippetInterface {
     return {
       id: this.id,
       title: this.title,

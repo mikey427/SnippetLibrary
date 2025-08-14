@@ -1,7 +1,7 @@
 import {
-  Snippet as ISnippet,
+  SnippetInterface,
   SnippetData,
-  SearchQuery as ISearchQuery,
+  SearchQueryInterface,
   ImportData,
   ImportResult,
   ExportData,
@@ -80,7 +80,7 @@ export class SnippetManagerImpl implements SnippetManager {
   /**
    * Create a new snippet
    */
-  async createSnippet(data: SnippetData): Promise<Result<ISnippet>> {
+  async createSnippet(data: SnippetData): Promise<Result<SnippetInterface>> {
     if (!this.initialized) {
       return {
         success: false,
@@ -148,7 +148,7 @@ export class SnippetManagerImpl implements SnippetManager {
   /**
    * Get a snippet by ID
    */
-  async getSnippet(id: string): Promise<Result<ISnippet | null>> {
+  async getSnippet(id: string): Promise<Result<SnippetInterface | null>> {
     if (!this.initialized) {
       return {
         success: false,
@@ -184,7 +184,7 @@ export class SnippetManagerImpl implements SnippetManager {
   /**
    * Get all snippets
    */
-  async getAllSnippets(): Promise<Result<ISnippet[]>> {
+  async getAllSnippets(): Promise<Result<SnippetInterface[]>> {
     if (!this.initialized) {
       return {
         success: false,
@@ -222,7 +222,7 @@ export class SnippetManagerImpl implements SnippetManager {
   async updateSnippet(
     id: string,
     updates: Partial<SnippetData>
-  ): Promise<Result<ISnippet>> {
+  ): Promise<Result<SnippetInterface>> {
     if (!this.initialized) {
       return {
         success: false,
@@ -365,7 +365,9 @@ export class SnippetManagerImpl implements SnippetManager {
   /**
    * Search snippets with query
    */
-  async searchSnippets(query: ISearchQuery): Promise<Result<ISnippet[]>> {
+  async searchSnippets(
+    query: SearchQueryInterface
+  ): Promise<Result<SnippetInterface[]>> {
     if (!this.initialized) {
       return {
         success: false,
@@ -843,7 +845,9 @@ export class SnippetManagerImpl implements SnippetManager {
    *
  Get snippets by language
    */
-  async getSnippetsByLanguage(language: string): Promise<Result<ISnippet[]>> {
+  async getSnippetsByLanguage(
+    language: string
+  ): Promise<Result<SnippetInterface[]>> {
     if (!this.initialized) {
       return {
         success: false,
@@ -879,7 +883,7 @@ export class SnippetManagerImpl implements SnippetManager {
   /**
    * Get snippets by tags
    */
-  async getSnippetsByTags(tags: string[]): Promise<Result<ISnippet[]>> {
+  async getSnippetsByTags(tags: string[]): Promise<Result<SnippetInterface[]>> {
     if (!this.initialized) {
       return {
         success: false,
@@ -915,7 +919,9 @@ export class SnippetManagerImpl implements SnippetManager {
   /**
    * Get snippets by category
    */
-  async getSnippetsByCategory(category: string): Promise<Result<ISnippet[]>> {
+  async getSnippetsByCategory(
+    category: string
+  ): Promise<Result<SnippetInterface[]>> {
     if (!this.initialized) {
       return {
         success: false,

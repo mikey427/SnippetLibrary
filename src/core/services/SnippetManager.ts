@@ -1,7 +1,7 @@
 import {
-  Snippet,
+  SnippetInterface,
   SnippetData,
-  SearchQuery,
+  SearchQueryInterface,
   ImportData,
   ImportResult,
   ExportData,
@@ -16,17 +16,17 @@ export interface SnippetManager {
   /**
    * Create a new snippet
    */
-  createSnippet(data: SnippetData): Promise<Result<Snippet>>;
+  createSnippet(data: SnippetData): Promise<Result<SnippetInterface>>;
 
   /**
    * Get a snippet by ID
    */
-  getSnippet(id: string): Promise<Result<Snippet | null>>;
+  getSnippet(id: string): Promise<Result<SnippetInterface | null>>;
 
   /**
    * Get all snippets
    */
-  getAllSnippets(): Promise<Result<Snippet[]>>;
+  getAllSnippets(): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Update an existing snippet
@@ -34,7 +34,7 @@ export interface SnippetManager {
   updateSnippet(
     id: string,
     updates: Partial<SnippetData>
-  ): Promise<Result<Snippet>>;
+  ): Promise<Result<SnippetInterface>>;
 
   /**
    * Delete a snippet
@@ -44,7 +44,9 @@ export interface SnippetManager {
   /**
    * Search snippets with query
    */
-  searchSnippets(query: SearchQuery): Promise<Result<Snippet[]>>;
+  searchSnippets(
+    query: SearchQueryInterface
+  ): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Import snippets from data
@@ -69,17 +71,17 @@ export interface SnippetManager {
   /**
    * Get snippets by language
    */
-  getSnippetsByLanguage(language: string): Promise<Result<Snippet[]>>;
+  getSnippetsByLanguage(language: string): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Get snippets by tags
    */
-  getSnippetsByTags(tags: string[]): Promise<Result<Snippet[]>>;
+  getSnippetsByTags(tags: string[]): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Get snippets by category
    */
-  getSnippetsByCategory(category: string): Promise<Result<Snippet[]>>;
+  getSnippetsByCategory(category: string): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Get all unique languages
@@ -120,7 +122,7 @@ export interface UsageStatistics {
   totalUsage: number;
   averageUsage: number;
   mostUsedSnippets: Array<{
-    snippet: Snippet;
+    snippet: SnippetInterface;
     usageCount: number;
   }>;
   languageDistribution: Array<{
@@ -138,6 +140,6 @@ export interface UsageStatistics {
     count: number;
     percentage: number;
   }>;
-  recentlyCreated: Snippet[];
-  recentlyUpdated: Snippet[];
+  recentlyCreated: SnippetInterface[];
+  recentlyUpdated: SnippetInterface[];
 }

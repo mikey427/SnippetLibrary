@@ -1,8 +1,8 @@
 import {
-  Snippet,
+  SnippetInterface,
   StorageLocation,
   StorageChange,
-  StorageConfig,
+  StorageConfigInterface,
   Result,
 } from "../types";
 
@@ -13,17 +13,17 @@ export interface StorageService {
   /**
    * Load all snippets from storage
    */
-  loadSnippets(): Promise<Result<Snippet[]>>;
+  loadSnippets(): Promise<Result<SnippetInterface[]>>;
 
   /**
    * Save snippets to storage
    */
-  saveSnippets(snippets: Snippet[]): Promise<Result<void>>;
+  saveSnippets(snippets: SnippetInterface[]): Promise<Result<void>>;
 
   /**
    * Save a single snippet
    */
-  saveSnippet(snippet: Snippet): Promise<Result<void>>;
+  saveSnippet(snippet: SnippetInterface): Promise<Result<void>>;
 
   /**
    * Delete a snippet from storage
@@ -53,12 +53,12 @@ export interface StorageService {
   /**
    * Get storage configuration
    */
-  getConfig(): StorageConfig;
+  getConfig(): StorageConfigInterface;
 
   /**
    * Update storage configuration
    */
-  updateConfig(config: Partial<StorageConfig>): Promise<Result<void>>;
+  updateConfig(config: Partial<StorageConfigInterface>): Promise<Result<void>>;
 
   /**
    * Create backup of current snippets

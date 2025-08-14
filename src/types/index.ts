@@ -1,7 +1,7 @@
 /**
  * Core data model for a code snippet
  */
-export interface Snippet {
+export interface SnippetInterface {
   id: string;
   title: string;
   description: string;
@@ -33,7 +33,7 @@ export interface SnippetData {
 /**
  * Search query parameters for filtering snippets
  */
-export interface SearchQuery {
+export interface SearchQueryInterface {
   text?: string;
   language?: string;
   tags?: string[];
@@ -49,7 +49,7 @@ export interface SearchQuery {
 /**
  * Configuration for snippet storage
  */
-export interface StorageConfig {
+export interface StorageConfigInterface {
   location: "workspace" | "global";
   path?: string;
   format: "json" | "yaml";
@@ -100,7 +100,7 @@ export interface ExportFilter {
  * Export data structure
  */
 export interface ExportData {
-  snippets: Snippet[];
+  snippets: SnippetInterface[];
   metadata: {
     exportedAt: Date;
     version: string;
@@ -112,7 +112,7 @@ export interface ExportData {
  * Conflict resolution for imports
  */
 export interface ConflictResolution {
-  existingSnippet: Snippet;
+  existingSnippet: SnippetInterface;
   newSnippet: SnippetData;
   resolution: "skip" | "overwrite" | "rename";
   newName?: string;
@@ -123,7 +123,7 @@ export interface ConflictResolution {
  */
 export interface StorageChange {
   type: "created" | "updated" | "deleted";
-  snippet: Snippet;
+  snippet: SnippetInterface;
   timestamp: Date;
 }
 

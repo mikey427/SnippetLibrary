@@ -1,22 +1,18 @@
-import {
-  StorageConfig as IStorageConfig,
-  Result,
-  ErrorType,
-} from "../../types";
+import { StorageConfigInterface, Result, ErrorType } from "../../types";
 import { createError, isEmpty } from "../utils";
 import * as path from "path";
 
 /**
  * StorageConfig class with location and format validation
  */
-export class StorageConfig implements IStorageConfig {
+export class StorageConfig implements StorageConfigInterface {
   public location: "workspace" | "global";
   public path?: string;
   public format: "json" | "yaml";
   public autoBackup: boolean;
   public backupInterval: number;
 
-  constructor(config: Partial<IStorageConfig> = {}) {
+  constructor(config: Partial<StorageConfigInterface> = {}) {
     // Validate the config before creating
     const validation = StorageConfig.validate(config);
     if (!validation.success) {
@@ -215,7 +211,7 @@ export class StorageConfig implements IStorageConfig {
   /**
    * Update the configuration
    */
-  update(updates: Partial<IStorageConfig>): Result<void> {
+  update(updates: Partial<StorageConfigInterface>): Result<void> {
     // Create a temporary object with the updates to validate
     const updatedConfig = {
       ...this.toPlainObject(),
@@ -312,7 +308,7 @@ export class StorageConfig implements IStorageConfig {
   /**
    * Convert to plain object
    */
-  toPlainObject(): IStorageConfig {
+  toPlainObject(): StorageConfigInterface {
     return {
       location: this.location,
       path: this.path,
@@ -325,7 +321,7 @@ export class StorageConfig implements IStorageConfig {
   /**
    * Convert to JSON
    */
-  toJSON(): IStorageConfig {
+  toJSON(): StorageConfigInterface {
     return this.toPlainObject();
   }
 

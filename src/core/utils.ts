@@ -1,4 +1,9 @@
-import { Snippet, SnippetData, ErrorType, SnippetError } from "../types";
+import {
+  SnippetInterface,
+  SnippetData,
+  ErrorType,
+  SnippetError,
+} from "../types";
 
 /**
  * Generate a unique ID for snippets
@@ -10,7 +15,7 @@ export function generateId(): string {
 /**
  * Create a snippet object from snippet data
  */
-export function createSnippetFromData(data: SnippetData): Snippet {
+export function createSnippetFromData(data: SnippetData): SnippetInterface {
   const now = new Date();
   return {
     id: generateId(),
@@ -32,9 +37,9 @@ export function createSnippetFromData(data: SnippetData): Snippet {
  * Update a snippet with new data
  */
 export function updateSnippetWithData(
-  snippet: Snippet,
+  snippet: SnippetInterface,
   updates: Partial<SnippetData>
-): Snippet {
+): SnippetInterface {
   return {
     ...snippet,
     ...updates,

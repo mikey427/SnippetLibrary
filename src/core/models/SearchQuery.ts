@@ -1,11 +1,11 @@
-import { SearchQuery as ISearchQuery, Result, ErrorType } from "../../types";
+import { SearchQueryInterface, Result, ErrorType } from "../../types";
 import { createError } from "../utils";
 import { validateSearchQuery } from "../validation";
 
 /**
  * SearchQuery class with query building and validation
  */
-export class SearchQuery implements ISearchQuery {
+export class SearchQuery implements SearchQueryInterface {
   public text?: string;
   public language?: string;
   public tags?: string[];
@@ -17,7 +17,7 @@ export class SearchQuery implements ISearchQuery {
   public sortBy?: "title" | "createdAt" | "usageCount";
   public sortOrder?: "asc" | "desc";
 
-  constructor(query: Partial<ISearchQuery> = {}) {
+  constructor(query: Partial<SearchQueryInterface> = {}) {
     // Validate the query before creating
     const validation = validateSearchQuery(query);
     if (!validation.success) {
@@ -265,7 +265,7 @@ export class SearchQuery implements ISearchQuery {
   /**
    * Convert to plain object
    */
-  toPlainObject(): ISearchQuery {
+  toPlainObject(): SearchQueryInterface {
     return {
       text: this.text,
       language: this.language,
@@ -285,7 +285,7 @@ export class SearchQuery implements ISearchQuery {
   /**
    * Convert to JSON string
    */
-  toJSON(): ISearchQuery {
+  toJSON(): SearchQueryInterface {
     return this.toPlainObject();
   }
 }
