@@ -416,6 +416,20 @@ export class CommandHandler {
       // Add management actions at the top
       quickPickItems.unshift(
         {
+          label: "$(list-selection) Bulk Operations",
+          description: "Manage multiple snippets at once",
+          detail: "Select multiple snippets for bulk operations",
+          snippet: {} as SnippetInterface,
+          action: "bulk",
+        },
+        {
+          label: "$(organization) Organize Snippets",
+          description: "Organize snippets by categories and tags",
+          detail: "Manage snippet organization and categorization",
+          snippet: {} as SnippetInterface,
+          action: "organize",
+        },
+        {
           label: "$(refresh) Refresh Snippets",
           description: "Reload snippets from storage",
           detail: "Refresh the snippet library",
@@ -450,6 +464,12 @@ export class CommandHandler {
 
       // Handle actions
       switch (selected.action) {
+        case "bulk":
+          await this.bulkOperations();
+          break;
+        case "organize":
+          await this.organizeSnippets();
+          break;
         case "refresh":
           await this.refreshSnippets();
           break;
@@ -467,6 +487,186 @@ export class CommandHandler {
       console.error("Error managing snippets:", error);
       vscode.window.showErrorMessage(
         `Error managing snippets: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
+   * Bulk operations for multiple snippets
+   */
+  async bulkOperations(): Promise<void> {
+    try {
+      // Get all snippets
+      const result = await this.snippetManager.getAllSnippets();
+      if (!result.success) {
+        vscode.window.showErrorMessage(
+          `Failed to load snippets: ${result.error.message}`
+        );
+        return;
+      }
+
+      const snippets = result.data;
+      if (snippets.length === 0) {
+        vscode.window.showInformationMessage("No snippets found!");
+        return;
+      }
+
+      // Create multi-select quick pick items
+      const quickPickItems: (vscode.QuickPickItem & {
+        snippet: SnippetInterface;
+      })[] = snippets.map((snippet) => ({
+        label: `$(file-code) ${snippet.title}`,
+        description: `${snippet.language} | ${
+          snippet.tags.join(", ") || "No tags"
+        }`,
+        detail: snippet.description || "No description",
+        snippet,
+      }));
+
+      const selectedItems = await vscode.window.showQuickPick(quickPickItems, {
+        placeHolder:
+          "Select snippets for bulk operations (use Ctrl/Cmd to multi-select)",
+        canPickMany: true,
+        matchOnDescription: true,
+        matchOnDetail: true,
+      });
+
+      if (!selectedItems || selectedItems.length === 0) {
+        return; // User cancelled or no selection
+      }
+
+      const selectedSnippets = selectedItems.map((item) => item.snippet);
+
+      // Show bulk operation options
+      const operation = await vscode.window.showQuickPick(
+        [
+          {
+            label: "$(trash) Delete Selected",
+            value: "delete",
+            description: `Delete ${selectedSnippets.length} snippets`,
+          },
+          {
+            label: "$(tag) Add Tags",
+            value: "addTags",
+            description: `Add tags to ${selectedSnippets.length} snippets`,
+          },
+          {
+            label: "$(close) Remove Tags",
+            value: "removeTags",
+            description: `Remove tags from ${selectedSnippets.length} snippets`,
+          },
+          {
+            label: "$(organization) Set Category",
+            value: "setCategory",
+            description: `Set category for ${selectedSnippets.length} snippets`,
+          },
+          {
+            label: "$(export) Export Selected",
+            value: "export",
+            description: `Export ${selectedSnippets.length} snippets`,
+          },
+        ],
+        {
+          placeHolder: "Choose bulk operation",
+        }
+      );
+
+      if (!operation) {
+        return; // User cancelled
+      }
+
+      switch (operation.value) {
+        case "delete":
+          await this.bulkDelete(selectedSnippets);
+          break;
+        case "addTags":
+          await this.bulkAddTags(selectedSnippets);
+          break;
+        case "removeTags":
+          await this.bulkRemoveTags(selectedSnippets);
+          break;
+        case "setCategory":
+          await this.bulkSetCategory(selectedSnippets);
+          break;
+        case "export":
+          await this.bulkExport(selectedSnippets);
+          break;
+      }
+    } catch (error) {
+      console.error("Error in bulk operations:", error);
+      vscode.window.showErrorMessage(
+        `Error in bulk operations: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
+   * Organize snippets by categories and tags
+   */
+  async organizeSnippets(): Promise<void> {
+    try {
+      const operation = await vscode.window.showQuickPick(
+        [
+          {
+            label: "$(list-tree) View by Category",
+            value: "viewByCategory",
+            description: "Browse snippets organized by category",
+          },
+          {
+            label: "$(tag) View by Tags",
+            value: "viewByTags",
+            description: "Browse snippets organized by tags",
+          },
+          {
+            label: "$(symbol-misc) View by Language",
+            value: "viewByLanguage",
+            description: "Browse snippets organized by programming language",
+          },
+          {
+            label: "$(graph) Usage Statistics",
+            value: "statistics",
+            description: "View snippet usage statistics and insights",
+          },
+          {
+            label: "$(organization) Cleanup",
+            value: "cleanup",
+            description: "Clean up unused tags and empty categories",
+          },
+        ],
+        {
+          placeHolder: "Choose organization view or action",
+        }
+      );
+
+      if (!operation) {
+        return; // User cancelled
+      }
+
+      switch (operation.value) {
+        case "viewByCategory":
+          await this.viewSnippetsByCategory();
+          break;
+        case "viewByTags":
+          await this.viewSnippetsByTags();
+          break;
+        case "viewByLanguage":
+          await this.viewSnippetsByLanguage();
+          break;
+        case "statistics":
+          await this.showUsageStatistics();
+          break;
+        case "cleanup":
+          await this.cleanupOrganization();
+          break;
+      }
+    } catch (error) {
+      console.error("Error organizing snippets:", error);
+      vscode.window.showErrorMessage(
+        `Error organizing snippets: ${
           error instanceof Error ? error.message : error
         }`
       );
@@ -680,13 +880,311 @@ export class CommandHandler {
   }
 
   /**
-   * Edit a snippet
+   * Edit a snippet with full metadata modification
    */
   private async editSnippet(snippet: SnippetInterface): Promise<void> {
-    // For now, just show a message - full editing will be implemented in later tasks
-    vscode.window.showInformationMessage(
-      `Editing snippet "${snippet.title}" - Full editing functionality will be implemented in later tasks.`
+    try {
+      // Create a multi-step input for editing
+      const editOptions = await vscode.window.showQuickPick(
+        [
+          {
+            label: "$(edit) Edit All Properties",
+            value: "all",
+            description: "Edit title, description, code, tags, and category",
+          },
+          {
+            label: "$(symbol-text) Edit Title & Description",
+            value: "metadata",
+            description: "Edit only title and description",
+          },
+          {
+            label: "$(code) Edit Code",
+            value: "code",
+            description: "Edit the snippet code",
+          },
+          {
+            label: "$(tag) Edit Tags & Category",
+            value: "tags",
+            description: "Edit tags and category",
+          },
+        ],
+        {
+          placeHolder: "What would you like to edit?",
+        }
+      );
+
+      if (!editOptions) {
+        return; // User cancelled
+      }
+
+      const updates: Partial<SnippetData> = {};
+
+      switch (editOptions.value) {
+        case "all":
+          await this.editAllProperties(snippet, updates);
+          break;
+        case "metadata":
+          await this.editMetadata(snippet, updates);
+          break;
+        case "code":
+          await this.editCode(snippet, updates);
+          break;
+        case "tags":
+          await this.editTagsAndCategory(snippet, updates);
+          break;
+      }
+
+      // Apply updates if any were made
+      if (Object.keys(updates).length > 0) {
+        const result = await this.snippetManager.updateSnippet(
+          snippet.id,
+          updates
+        );
+        if (result.success) {
+          vscode.window.showInformationMessage(
+            `Snippet "${snippet.title}" updated successfully!`
+          );
+        } else {
+          vscode.window.showErrorMessage(
+            `Failed to update snippet: ${result.error.message}`
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error editing snippet:", error);
+      vscode.window.showErrorMessage(
+        `Error editing snippet: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
+   * Edit all properties of a snippet
+   */
+  private async editAllProperties(
+    snippet: SnippetInterface,
+    updates: Partial<SnippetData>
+  ): Promise<void> {
+    // Edit title
+    const title = await vscode.window.showInputBox({
+      prompt: "Enter snippet title",
+      value: snippet.title,
+      validateInput: (value) => {
+        if (!value || value.trim().length === 0) {
+          return "Title is required";
+        }
+        return null;
+      },
+    });
+
+    if (title === undefined) return; // User cancelled
+    if (title !== snippet.title) updates.title = title.trim();
+
+    // Edit description
+    const description = await vscode.window.showInputBox({
+      prompt: "Enter snippet description",
+      value: snippet.description,
+    });
+
+    if (description === undefined) return; // User cancelled
+    if (description !== snippet.description)
+      updates.description = description.trim();
+
+    // Edit code
+    await this.editCodeInEditor(snippet, updates);
+
+    // Edit tags
+    const tagsInput = await vscode.window.showInputBox({
+      prompt: "Enter tags (comma-separated)",
+      value: snippet.tags.join(", "),
+    });
+
+    if (tagsInput === undefined) return; // User cancelled
+    const newTags = tagsInput
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+
+    if (JSON.stringify(newTags) !== JSON.stringify(snippet.tags)) {
+      updates.tags = newTags;
+    }
+
+    // Edit category
+    const category = await vscode.window.showInputBox({
+      prompt: "Enter category",
+      value: snippet.category || "",
+    });
+
+    if (category === undefined) return; // User cancelled
+    if (category !== (snippet.category || "")) {
+      updates.category = category.trim() || undefined;
+    }
+
+    // Edit prefix
+    const prefix = await vscode.window.showInputBox({
+      prompt: "Enter snippet prefix for IntelliSense",
+      value: snippet.prefix || "",
+      validateInput: (value) => {
+        if (value && !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(value)) {
+          return "Prefix must start with a letter and contain only letters, numbers, and underscores";
+        }
+        return null;
+      },
+    });
+
+    if (prefix === undefined) return; // User cancelled
+    if (prefix !== (snippet.prefix || "")) {
+      updates.prefix = prefix.trim() || undefined;
+    }
+  }
+
+  /**
+   * Edit metadata (title and description) only
+   */
+  private async editMetadata(
+    snippet: SnippetInterface,
+    updates: Partial<SnippetData>
+  ): Promise<void> {
+    const title = await vscode.window.showInputBox({
+      prompt: "Enter snippet title",
+      value: snippet.title,
+      validateInput: (value) => {
+        if (!value || value.trim().length === 0) {
+          return "Title is required";
+        }
+        return null;
+      },
+    });
+
+    if (title === undefined) return; // User cancelled
+    if (title !== snippet.title) updates.title = title.trim();
+
+    const description = await vscode.window.showInputBox({
+      prompt: "Enter snippet description",
+      value: snippet.description,
+    });
+
+    if (description === undefined) return; // User cancelled
+    if (description !== snippet.description)
+      updates.description = description.trim();
+  }
+
+  /**
+   * Edit code only
+   */
+  private async editCode(
+    snippet: SnippetInterface,
+    updates: Partial<SnippetData>
+  ): Promise<void> {
+    await this.editCodeInEditor(snippet, updates);
+  }
+
+  /**
+   * Edit tags and category only
+   */
+  private async editTagsAndCategory(
+    snippet: SnippetInterface,
+    updates: Partial<SnippetData>
+  ): Promise<void> {
+    // Get existing tags for suggestions
+    const allTagsResult = await this.snippetManager.getTags();
+    const existingTags = allTagsResult.success ? allTagsResult.data : [];
+
+    const tagsInput = await vscode.window.showInputBox({
+      prompt: `Enter tags (comma-separated). Available: ${existingTags.join(
+        ", "
+      )}`,
+      value: snippet.tags.join(", "),
+    });
+
+    if (tagsInput === undefined) return; // User cancelled
+    const newTags = tagsInput
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+
+    if (JSON.stringify(newTags) !== JSON.stringify(snippet.tags)) {
+      updates.tags = newTags;
+    }
+
+    // Get existing categories for suggestions
+    const allCategoriesResult = await this.snippetManager.getCategories();
+    const existingCategories = allCategoriesResult.success
+      ? allCategoriesResult.data
+      : [];
+
+    const categoryInput =
+      existingCategories.length > 0
+        ? await vscode.window.showQuickPick(
+            [
+              { label: "$(add) Create New Category", value: "__new__" },
+              ...existingCategories.map((cat) => ({ label: cat, value: cat })),
+              { label: "$(close) No Category", value: "" },
+            ],
+            {
+              placeHolder: "Select or create a category",
+            }
+          )
+        : null;
+
+    let category: string | undefined;
+    if (categoryInput?.value === "__new__") {
+      const newCategory = await vscode.window.showInputBox({
+        prompt: "Enter new category name",
+      });
+      category = newCategory?.trim();
+    } else if (categoryInput) {
+      category = categoryInput.value || undefined;
+    } else {
+      // Fallback to input box if no existing categories
+      const categoryText = await vscode.window.showInputBox({
+        prompt: "Enter category",
+        value: snippet.category || "",
+      });
+      category = categoryText?.trim() || undefined;
+    }
+
+    if (category !== (snippet.category || "")) {
+      updates.category = category;
+    }
+  }
+
+  /**
+   * Edit code in a temporary editor
+   */
+  private async editCodeInEditor(
+    snippet: SnippetInterface,
+    updates: Partial<SnippetData>
+  ): Promise<void> {
+    // Create a temporary document with the snippet code
+    const document = await vscode.workspace.openTextDocument({
+      content: snippet.code,
+      language: snippet.language,
+    });
+
+    const editor = await vscode.window.showTextDocument(document, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preview: false,
+    });
+
+    const choice = await vscode.window.showInformationMessage(
+      `Edit the code for "${snippet.title}", then click "Save Changes"`,
+      { modal: false },
+      "Save Changes",
+      "Cancel"
     );
+
+    if (choice === "Save Changes") {
+      const newCode = editor.document.getText();
+      if (newCode !== snippet.code) {
+        updates.code = newCode;
+      }
+    }
+
+    // Close the temporary editor
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
   }
 
   /**
@@ -701,7 +1199,7 @@ export class CommandHandler {
   }
 
   /**
-   * Delete a snippet
+   * Delete a snippet with confirmation
    */
   private async deleteSnippet(snippet: SnippetInterface): Promise<void> {
     const confirmation = await vscode.window.showWarningMessage(
@@ -721,6 +1219,321 @@ export class CommandHandler {
           `Failed to delete snippet: ${result.error.message}`
         );
       }
+    }
+  }
+
+  /**
+   * Bulk delete multiple snippets
+   */
+  private async bulkDelete(snippets: SnippetInterface[]): Promise<void> {
+    const confirmation = await vscode.window.showWarningMessage(
+      `Are you sure you want to delete ${snippets.length} snippets?`,
+      { modal: true },
+      "Delete All"
+    );
+
+    if (confirmation !== "Delete All") {
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Deleting snippets...",
+        cancellable: false,
+      },
+      async (progress) => {
+        for (let i = 0; i < snippets.length; i++) {
+          const snippet = snippets[i];
+          progress.report({
+            increment: 100 / snippets.length,
+            message: `Deleting "${snippet.title}"...`,
+          });
+
+          const result = await this.snippetManager.deleteSnippet(snippet.id);
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+            errors.push(`${snippet.title}: ${result.error.message}`);
+          }
+        }
+      }
+    );
+
+    if (errorCount === 0) {
+      vscode.window.showInformationMessage(
+        `Successfully deleted ${successCount} snippets!`
+      );
+    } else {
+      vscode.window.showWarningMessage(
+        `Deleted ${successCount} snippets, ${errorCount} failed. Check output for details.`
+      );
+      console.error("Bulk delete errors:", errors);
+    }
+  }
+
+  /**
+   * Bulk add tags to multiple snippets
+   */
+  private async bulkAddTags(snippets: SnippetInterface[]): Promise<void> {
+    // Get existing tags for suggestions
+    const allTagsResult = await this.snippetManager.getTags();
+    const existingTags = allTagsResult.success ? allTagsResult.data : [];
+
+    const tagsInput = await vscode.window.showInputBox({
+      prompt: `Enter tags to add (comma-separated). Available: ${existingTags.join(
+        ", "
+      )}`,
+      placeHolder: "tag1, tag2, tag3",
+    });
+
+    if (!tagsInput) {
+      return; // User cancelled
+    }
+
+    const tagsToAdd = tagsInput
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+
+    if (tagsToAdd.length === 0) {
+      vscode.window.showWarningMessage("No valid tags provided");
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Adding tags...",
+        cancellable: false,
+      },
+      async (progress) => {
+        for (let i = 0; i < snippets.length; i++) {
+          const snippet = snippets[i];
+          progress.report({
+            increment: 100 / snippets.length,
+            message: `Adding tags to "${snippet.title}"...`,
+          });
+
+          const newTags = [...new Set([...snippet.tags, ...tagsToAdd])];
+          const result = await this.snippetManager.updateSnippet(snippet.id, {
+            tags: newTags,
+          });
+
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        }
+      }
+    );
+
+    vscode.window.showInformationMessage(
+      `Added tags to ${successCount} snippets${
+        errorCount > 0 ? `, ${errorCount} failed` : ""
+      }`
+    );
+  }
+
+  /**
+   * Bulk remove tags from multiple snippets
+   */
+  private async bulkRemoveTags(snippets: SnippetInterface[]): Promise<void> {
+    // Get all tags from selected snippets
+    const allTags = new Set<string>();
+    snippets.forEach((snippet) => {
+      snippet.tags.forEach((tag) => allTags.add(tag));
+    });
+
+    if (allTags.size === 0) {
+      vscode.window.showInformationMessage(
+        "Selected snippets have no tags to remove"
+      );
+      return;
+    }
+
+    const tagsToRemove = await vscode.window.showQuickPick(
+      Array.from(allTags).map((tag) => ({ label: tag, value: tag })),
+      {
+        placeHolder: "Select tags to remove",
+        canPickMany: true,
+      }
+    );
+
+    if (!tagsToRemove || tagsToRemove.length === 0) {
+      return; // User cancelled
+    }
+
+    const tagsToRemoveSet = new Set(tagsToRemove.map((t) => t.value));
+    let successCount = 0;
+    let errorCount = 0;
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Removing tags...",
+        cancellable: false,
+      },
+      async (progress) => {
+        for (let i = 0; i < snippets.length; i++) {
+          const snippet = snippets[i];
+          progress.report({
+            increment: 100 / snippets.length,
+            message: `Removing tags from "${snippet.title}"...`,
+          });
+
+          const newTags = snippet.tags.filter(
+            (tag) => !tagsToRemoveSet.has(tag)
+          );
+          if (newTags.length !== snippet.tags.length) {
+            const result = await this.snippetManager.updateSnippet(snippet.id, {
+              tags: newTags,
+            });
+
+            if (result.success) {
+              successCount++;
+            } else {
+              errorCount++;
+            }
+          }
+        }
+      }
+    );
+
+    vscode.window.showInformationMessage(
+      `Removed tags from ${successCount} snippets${
+        errorCount > 0 ? `, ${errorCount} failed` : ""
+      }`
+    );
+  }
+
+  /**
+   * Bulk set category for multiple snippets
+   */
+  private async bulkSetCategory(snippets: SnippetInterface[]): Promise<void> {
+    // Get existing categories for suggestions
+    const allCategoriesResult = await this.snippetManager.getCategories();
+    const existingCategories = allCategoriesResult.success
+      ? allCategoriesResult.data
+      : [];
+
+    const categoryOptions = [
+      { label: "$(add) Create New Category", value: "__new__" },
+      ...existingCategories.map((cat) => ({ label: cat, value: cat })),
+      { label: "$(close) Remove Category", value: "" },
+    ];
+
+    const selectedCategory = await vscode.window.showQuickPick(
+      categoryOptions,
+      {
+        placeHolder: "Select or create a category",
+      }
+    );
+
+    if (!selectedCategory) {
+      return; // User cancelled
+    }
+
+    let category: string | undefined;
+    if (selectedCategory.value === "__new__") {
+      const newCategory = await vscode.window.showInputBox({
+        prompt: "Enter new category name",
+      });
+      category = newCategory?.trim();
+      if (!category) return;
+    } else {
+      category = selectedCategory.value || undefined;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Setting category...",
+        cancellable: false,
+      },
+      async (progress) => {
+        for (let i = 0; i < snippets.length; i++) {
+          const snippet = snippets[i];
+          progress.report({
+            increment: 100 / snippets.length,
+            message: `Setting category for "${snippet.title}"...`,
+          });
+
+          const result = await this.snippetManager.updateSnippet(snippet.id, {
+            category,
+          });
+
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        }
+      }
+    );
+
+    const categoryName = category || "no category";
+    vscode.window.showInformationMessage(
+      `Set category "${categoryName}" for ${successCount} snippets${
+        errorCount > 0 ? `, ${errorCount} failed` : ""
+      }`
+    );
+  }
+
+  /**
+   * Bulk export selected snippets
+   */
+  private async bulkExport(snippets: SnippetInterface[]): Promise<void> {
+    try {
+      const exportData = {
+        snippets,
+        metadata: {
+          exportedAt: new Date(),
+          version: "1.0.0",
+          count: snippets.length,
+        },
+      };
+
+      const exportJson = JSON.stringify(exportData, null, 2);
+
+      // Show save dialog
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(
+          `selected-snippets-${new Date().toISOString().split("T")[0]}.json`
+        ),
+        filters: {
+          "JSON Files": ["json"],
+        },
+      });
+
+      if (uri) {
+        await vscode.workspace.fs.writeFile(
+          uri,
+          Buffer.from(exportJson, "utf8")
+        );
+        vscode.window.showInformationMessage(
+          `Exported ${snippets.length} selected snippets to ${uri.fsPath}`
+        );
+      }
+    } catch (error) {
+      console.error("Error exporting selected snippets:", error);
+      vscode.window.showErrorMessage(
+        `Error exporting snippets: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
     }
   }
 
@@ -913,6 +1726,478 @@ export class CommandHandler {
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 
     return codeLines.join("\n").trim();
+  }
+
+  /**
+   * View snippets organized by category
+   */
+  private async viewSnippetsByCategory(): Promise<void> {
+    try {
+      const categoriesResult = await this.snippetManager.getCategories();
+      if (!categoriesResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get categories: ${categoriesResult.error.message}`
+        );
+        return;
+      }
+
+      const categories = categoriesResult.data;
+      const allSnippetsResult = await this.snippetManager.getAllSnippets();
+      if (!allSnippetsResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get snippets: ${allSnippetsResult.error.message}`
+        );
+        return;
+      }
+
+      const allSnippets = allSnippetsResult.data;
+      const uncategorizedSnippets = allSnippets.filter((s) => !s.category);
+
+      // Create category options
+      const categoryOptions = [
+        ...categories.map((category) => {
+          const count = allSnippets.filter(
+            (s) => s.category === category
+          ).length;
+          return {
+            label: `$(folder) ${category}`,
+            description: `${count} snippets`,
+            value: category,
+          };
+        }),
+      ];
+
+      if (uncategorizedSnippets.length > 0) {
+        categoryOptions.push({
+          label: "$(file) Uncategorized",
+          description: `${uncategorizedSnippets.length} snippets`,
+          value: "__uncategorized__",
+        });
+      }
+
+      const selectedCategory = await vscode.window.showQuickPick(
+        categoryOptions,
+        {
+          placeHolder: "Select a category to view",
+        }
+      );
+
+      if (!selectedCategory) {
+        return; // User cancelled
+      }
+
+      let snippetsToShow: SnippetInterface[];
+      if (selectedCategory.value === "__uncategorized__") {
+        snippetsToShow = uncategorizedSnippets;
+      } else {
+        snippetsToShow = allSnippets.filter(
+          (s) => s.category === selectedCategory.value
+        );
+      }
+
+      await this.showSnippetList(
+        snippetsToShow,
+        `Snippets in "${selectedCategory.label}"`
+      );
+    } catch (error) {
+      console.error("Error viewing snippets by category:", error);
+      vscode.window.showErrorMessage(
+        `Error viewing snippets by category: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
+   * View snippets organized by tags
+   */
+  private async viewSnippetsByTags(): Promise<void> {
+    try {
+      const tagsResult = await this.snippetManager.getTags();
+      if (!tagsResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get tags: ${tagsResult.error.message}`
+        );
+        return;
+      }
+
+      const tags = tagsResult.data;
+      const allSnippetsResult = await this.snippetManager.getAllSnippets();
+      if (!allSnippetsResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get snippets: ${allSnippetsResult.error.message}`
+        );
+        return;
+      }
+
+      const allSnippets = allSnippetsResult.data;
+
+      // Create tag options with counts
+      const tagOptions = tags.map((tag) => {
+        const count = allSnippets.filter((s) => s.tags.includes(tag)).length;
+        return {
+          label: `$(tag) ${tag}`,
+          description: `${count} snippets`,
+          value: tag,
+        };
+      });
+
+      const selectedTag = await vscode.window.showQuickPick(tagOptions, {
+        placeHolder: "Select a tag to view",
+      });
+
+      if (!selectedTag) {
+        return; // User cancelled
+      }
+
+      const snippetsWithTag = allSnippets.filter((s) =>
+        s.tags.includes(selectedTag.value)
+      );
+
+      await this.showSnippetList(
+        snippetsWithTag,
+        `Snippets tagged with "${selectedTag.value}"`
+      );
+    } catch (error) {
+      console.error("Error viewing snippets by tags:", error);
+      vscode.window.showErrorMessage(
+        `Error viewing snippets by tags: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
+   * View snippets organized by language
+   */
+  private async viewSnippetsByLanguage(): Promise<void> {
+    try {
+      const languagesResult = await this.snippetManager.getLanguages();
+      if (!languagesResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get languages: ${languagesResult.error.message}`
+        );
+        return;
+      }
+
+      const languages = languagesResult.data;
+      const allSnippetsResult = await this.snippetManager.getAllSnippets();
+      if (!allSnippetsResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get snippets: ${allSnippetsResult.error.message}`
+        );
+        return;
+      }
+
+      const allSnippets = allSnippetsResult.data;
+
+      // Create language options with counts
+      const languageOptions = languages.map((language) => {
+        const count = allSnippets.filter((s) => s.language === language).length;
+        return {
+          label: `$(symbol-misc) ${language}`,
+          description: `${count} snippets`,
+          value: language,
+        };
+      });
+
+      const selectedLanguage = await vscode.window.showQuickPick(
+        languageOptions,
+        {
+          placeHolder: "Select a language to view",
+        }
+      );
+
+      if (!selectedLanguage) {
+        return; // User cancelled
+      }
+
+      const snippetsInLanguage = allSnippets.filter(
+        (s) => s.language === selectedLanguage.value
+      );
+
+      await this.showSnippetList(
+        snippetsInLanguage,
+        `${selectedLanguage.value} snippets`
+      );
+    } catch (error) {
+      console.error("Error viewing snippets by language:", error);
+      vscode.window.showErrorMessage(
+        `Error viewing snippets by language: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
+   * Show usage statistics
+   */
+  private async showUsageStatistics(): Promise<void> {
+    try {
+      const statsResult = await this.snippetManager.getUsageStatistics();
+      if (!statsResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get statistics: ${statsResult.error.message}`
+        );
+        return;
+      }
+
+      const stats = statsResult.data;
+
+      // Create statistics content
+      const content = [
+        "# Snippet Library Statistics",
+        "",
+        `**Total Snippets:** ${stats.totalSnippets}`,
+        `**Total Usage:** ${stats.totalUsage}`,
+        `**Average Usage:** ${stats.averageUsage.toFixed(2)}`,
+        "",
+        "## Most Used Snippets",
+        ...stats.mostUsedSnippets
+          .slice(0, 5)
+          .map(
+            (item, index) =>
+              `${index + 1}. **${item.snippet.title}** (${
+                item.usageCount
+              } uses)`
+          ),
+        "",
+        "## Language Distribution",
+        ...stats.languageDistribution
+          .slice(0, 5)
+          .map(
+            (item) =>
+              `- **${item.language}:** ${
+                item.count
+              } snippets (${item.percentage.toFixed(1)}%)`
+          ),
+        "",
+        "## Top Tags",
+        ...stats.tagDistribution
+          .slice(0, 10)
+          .map(
+            (item) =>
+              `- **${item.tag}:** ${
+                item.count
+              } snippets (${item.percentage.toFixed(1)}%)`
+          ),
+        "",
+        "## Categories",
+        ...stats.categoryDistribution.map(
+          (item) =>
+            `- **${item.category}:** ${
+              item.count
+            } snippets (${item.percentage.toFixed(1)}%)`
+        ),
+      ].join("\n");
+
+      // Show statistics in a new document
+      const document = await vscode.workspace.openTextDocument({
+        content,
+        language: "markdown",
+      });
+
+      await vscode.window.showTextDocument(document, { preview: true });
+    } catch (error) {
+      console.error("Error showing usage statistics:", error);
+      vscode.window.showErrorMessage(
+        `Error showing statistics: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
+   * Cleanup organization (remove unused tags, empty categories)
+   */
+  private async cleanupOrganization(): Promise<void> {
+    try {
+      const allSnippetsResult = await this.snippetManager.getAllSnippets();
+      if (!allSnippetsResult.success) {
+        vscode.window.showErrorMessage(
+          `Failed to get snippets: ${allSnippetsResult.error.message}`
+        );
+        return;
+      }
+
+      const allSnippets = allSnippetsResult.data;
+
+      // Find empty tags and categories (this is informational since tags/categories are derived from snippets)
+      const usedTags = new Set<string>();
+      const usedCategories = new Set<string>();
+
+      allSnippets.forEach((snippet) => {
+        snippet.tags.forEach((tag) => usedTags.add(tag));
+        if (snippet.category) {
+          usedCategories.add(snippet.category);
+        }
+      });
+
+      // Show cleanup options
+      const cleanupOptions = [
+        {
+          label: "$(tag) Clean Empty Tags",
+          value: "tags",
+          description: "Remove empty tags from snippets",
+        },
+        {
+          label: "$(organization) Normalize Categories",
+          value: "categories",
+          description: "Standardize category names",
+        },
+        {
+          label: "$(symbol-misc) Remove Duplicate Tags",
+          value: "duplicates",
+          description: "Remove duplicate tags from snippets",
+        },
+      ];
+
+      const selectedCleanup = await vscode.window.showQuickPick(
+        cleanupOptions,
+        {
+          placeHolder: "Select cleanup operation",
+          canPickMany: true,
+        }
+      );
+
+      if (!selectedCleanup || selectedCleanup.length === 0) {
+        return; // User cancelled
+      }
+
+      let cleanedCount = 0;
+
+      for (const cleanup of selectedCleanup) {
+        switch (cleanup.value) {
+          case "tags":
+            cleanedCount += await this.cleanEmptyTags(allSnippets);
+            break;
+          case "categories":
+            cleanedCount += await this.normalizeCategories(allSnippets);
+            break;
+          case "duplicates":
+            cleanedCount += await this.removeDuplicateTags(allSnippets);
+            break;
+        }
+      }
+
+      vscode.window.showInformationMessage(
+        `Cleanup completed! ${cleanedCount} snippets were updated.`
+      );
+    } catch (error) {
+      console.error("Error cleaning up organization:", error);
+      vscode.window.showErrorMessage(
+        `Error cleaning up: ${error instanceof Error ? error.message : error}`
+      );
+    }
+  }
+
+  /**
+   * Show a list of snippets with management options
+   */
+  private async showSnippetList(
+    snippets: SnippetInterface[],
+    title: string
+  ): Promise<void> {
+    if (snippets.length === 0) {
+      vscode.window.showInformationMessage(`No snippets found in ${title}`);
+      return;
+    }
+
+    const quickPickItems = snippets.map((snippet) => ({
+      label: `$(file-code) ${snippet.title}`,
+      description: `${snippet.language} | ${
+        snippet.tags.join(", ") || "No tags"
+      }`,
+      detail: snippet.description || "No description",
+      snippet,
+    }));
+
+    const selected = await vscode.window.showQuickPick(quickPickItems, {
+      placeHolder: `${title} (${snippets.length} snippets)`,
+      matchOnDescription: true,
+      matchOnDetail: true,
+    });
+
+    if (selected) {
+      await this.manageIndividualSnippet(selected.snippet);
+    }
+  }
+
+  /**
+   * Clean empty tags from snippets
+   */
+  private async cleanEmptyTags(snippets: SnippetInterface[]): Promise<number> {
+    let cleanedCount = 0;
+
+    for (const snippet of snippets) {
+      const cleanTags = snippet.tags.filter((tag) => tag.trim().length > 0);
+      if (cleanTags.length !== snippet.tags.length) {
+        const result = await this.snippetManager.updateSnippet(snippet.id, {
+          tags: cleanTags,
+        });
+        if (result.success) {
+          cleanedCount++;
+        }
+      }
+    }
+
+    return cleanedCount;
+  }
+
+  /**
+   * Normalize category names
+   */
+  private async normalizeCategories(
+    snippets: SnippetInterface[]
+  ): Promise<number> {
+    let cleanedCount = 0;
+
+    for (const snippet of snippets) {
+      if (snippet.category) {
+        const normalizedCategory = snippet.category
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+
+        if (normalizedCategory !== snippet.category) {
+          const result = await this.snippetManager.updateSnippet(snippet.id, {
+            category: normalizedCategory,
+          });
+          if (result.success) {
+            cleanedCount++;
+          }
+        }
+      }
+    }
+
+    return cleanedCount;
+  }
+
+  /**
+   * Remove duplicate tags from snippets
+   */
+  private async removeDuplicateTags(
+    snippets: SnippetInterface[]
+  ): Promise<number> {
+    let cleanedCount = 0;
+
+    for (const snippet of snippets) {
+      const uniqueTags = [...new Set(snippet.tags)];
+      if (uniqueTags.length !== snippet.tags.length) {
+        const result = await this.snippetManager.updateSnippet(snippet.id, {
+          tags: uniqueTags,
+        });
+        if (result.success) {
+          cleanedCount++;
+        }
+      }
+    }
+
+    return cleanedCount;
   }
 
   /**
