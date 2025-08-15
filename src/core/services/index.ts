@@ -26,6 +26,15 @@ export {
   SearchPatterns,
 } from "./SearchQueryBuilder";
 
+// Export import/export services
+export {
+  ImportExportService,
+  ExportOptions,
+  ImportOptions,
+  BackupOptions,
+  FileFormat,
+} from "./ImportExportService";
+
 // Export factory functions
 import { FileSystemStorageService } from "./FileSystemStorageService";
 import { StorageConfigInterface } from "../../types";
