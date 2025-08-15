@@ -14,3 +14,30 @@ export * from "../interfaces/StorageService";
 // Export utility functions
 export * from "./utils";
 export * from "./validation";
+
+// Export models
+export * from "./models";
+
+// Export services (excluding conflicting names)
+export {
+  FileSystemStorageService,
+  SnippetManagerImpl,
+  UsageStatistics,
+  SearchService,
+  SearchResult,
+  SearchMatch,
+  SearchSuggestion,
+  SearchHistoryEntry,
+  RealTimeSearchManager,
+  SearchEvent,
+  SearchMetrics,
+  createRealTimeSearchManager,
+  SearchQueryBuilder,
+  AdvancedSearchFilter,
+  AdvancedSearchQuery,
+  SavedSearch,
+  SearchPatterns,
+  createStorageService,
+  createWorkspaceStorageService,
+  createGlobalStorageService,
+} from "./services";

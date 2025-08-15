@@ -4,6 +4,28 @@ export { FileSystemStorageService } from "./FileSystemStorageService";
 export { SnippetManager, UsageStatistics } from "./SnippetManager";
 export { SnippetManagerImpl } from "./SnippetManagerImpl";
 
+// Export search and filtering services
+export {
+  SearchService,
+  SearchResult,
+  SearchMatch,
+  SearchSuggestion,
+  SearchHistoryEntry,
+} from "./SearchService";
+export {
+  RealTimeSearchManager,
+  SearchEvent,
+  SearchMetrics,
+  createRealTimeSearchManager,
+} from "./RealTimeSearchManager";
+export {
+  SearchQueryBuilder,
+  AdvancedSearchFilter,
+  AdvancedSearchQuery,
+  SavedSearch,
+  SearchPatterns,
+} from "./SearchQueryBuilder";
+
 // Export factory functions
 import { FileSystemStorageService } from "./FileSystemStorageService";
 import { StorageConfigInterface } from "../../types";
