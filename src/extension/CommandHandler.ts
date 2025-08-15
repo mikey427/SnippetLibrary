@@ -99,11 +99,52 @@ export class CommandHandler {
         },
       });
 
+      // Ask if user wants to add tab stops and placeholders
+      const enhanceSnippet = await vscode.window.showQuickPick(
+        [
+          {
+            label: "Auto-enhance with placeholders",
+            description:
+              "Automatically detect and add tab stops for common patterns",
+            value: "auto",
+          },
+          {
+            label: "Manual enhancement",
+            description: "Let me add tab stops and placeholders manually",
+            value: "manual",
+          },
+          {
+            label: "Use as-is",
+            description: "Save the code exactly as selected",
+            value: "none",
+          },
+        ],
+        {
+          placeHolder: "How should the snippet be processed?",
+          ignoreFocusOut: true,
+        }
+      );
+
+      if (!enhanceSnippet) {
+        return; // User cancelled
+      }
+
+      let processedCode = selectedText;
+      if (enhanceSnippet.value === "auto") {
+        processedCode = this.autoEnhanceSnippet(selectedText);
+      } else if (enhanceSnippet.value === "manual") {
+        const manualResult = await this.manualEnhanceSnippet(selectedText);
+        if (manualResult === null) {
+          return; // User cancelled
+        }
+        processedCode = manualResult;
+      }
+
       // Create snippet data
       const snippetData: SnippetData = {
         title: title.trim(),
         description: description?.trim() || "",
-        code: selectedText,
+        code: processedCode,
         language: languageId,
         tags,
         category: category?.trim() || undefined,
@@ -132,7 +173,7 @@ export class CommandHandler {
   }
 
   /**
-   * Insert a snippet from the library
+   * Insert a snippet from the library with enhanced preview
    */
   async insertSnippet(): Promise<void> {
     try {
@@ -161,25 +202,53 @@ export class CommandHandler {
         return;
       }
 
-      // Create quick pick items
+      // Filter snippets by current language if available
+      const currentLanguage = editor.document.languageId;
+      const relevantSnippets = this.filterSnippetsByRelevance(
+        snippets,
+        currentLanguage
+      );
+
+      // Create enhanced quick pick items with preview
       const quickPickItems: (vscode.QuickPickItem & {
         snippet: SnippetInterface;
-      })[] = snippets.map((snippet) => ({
-        label: snippet.title,
-        description: snippet.language,
-        detail: snippet.description || "No description",
-        snippet,
-      }));
+      })[] = relevantSnippets.map((snippet) => {
+        const codePreview = this.createCodePreview(snippet.code);
+        const tags =
+          snippet.tags.length > 0 ? ` • ${snippet.tags.join(", ")}` : "";
+        const usageInfo =
+          snippet.usageCount > 0 ? ` • Used ${snippet.usageCount} times` : "";
 
-      // Show quick pick
+        return {
+          label: `$(file-code) ${snippet.title}`,
+          description: `${snippet.language}${tags}${usageInfo}`,
+          detail: `${
+            snippet.description || "No description"
+          }\n\n${codePreview}`,
+          snippet,
+        };
+      });
+
+      // Show enhanced quick pick with preview
       const selected = await vscode.window.showQuickPick(quickPickItems, {
-        placeHolder: "Select a snippet to insert",
+        placeHolder:
+          "Select a snippet to insert (filtered by current language)",
         matchOnDescription: true,
         matchOnDetail: true,
+        ignoreFocusOut: false,
       });
 
       if (!selected) {
         return; // User cancelled
+      }
+
+      // Show preview before insertion
+      const shouldInsert = await this.showSnippetPreview(
+        selected.snippet,
+        editor
+      );
+      if (!shouldInsert) {
+        return; // User cancelled after preview
       }
 
       // Insert the snippet
@@ -187,6 +256,11 @@ export class CommandHandler {
 
       // Increment usage count
       await this.snippetManager.incrementUsage(selected.snippet.id);
+
+      // Show success message with undo hint
+      vscode.window.showInformationMessage(
+        `Inserted "${selected.snippet.title}" • Press Ctrl+Z to undo`
+      );
     } catch (error) {
       console.error("Error inserting snippet:", error);
       vscode.window.showErrorMessage(
@@ -195,6 +269,112 @@ export class CommandHandler {
         }`
       );
     }
+  }
+
+  /**
+   * Filter snippets by relevance to current context
+   */
+  private filterSnippetsByRelevance(
+    snippets: SnippetInterface[],
+    currentLanguage: string
+  ): SnippetInterface[] {
+    // Sort snippets by relevance
+    return snippets.sort((a, b) => {
+      // Exact language match gets highest priority
+      if (a.language === currentLanguage && b.language !== currentLanguage)
+        return -1;
+      if (b.language === currentLanguage && a.language !== currentLanguage)
+        return 1;
+
+      // Then by usage count
+      if (a.usageCount !== b.usageCount) return b.usageCount - a.usageCount;
+
+      // Then by creation date (newer first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+
+  /**
+   * Create a code preview for quick pick display
+   */
+  private createCodePreview(code: string): string {
+    const lines = code.split("\n");
+    const maxLines = 3;
+    const maxLength = 80;
+
+    let preview = lines
+      .slice(0, maxLines)
+      .map((line) => {
+        if (line.length > maxLength) {
+          return line.substring(0, maxLength - 3) + "...";
+        }
+        return line;
+      })
+      .join("\n");
+
+    if (lines.length > maxLines) {
+      preview += "\n...";
+    }
+
+    return preview;
+  }
+
+  /**
+   * Show snippet preview before insertion
+   */
+  private async showSnippetPreview(
+    snippet: SnippetInterface,
+    editor: vscode.TextEditor
+  ): Promise<boolean> {
+    const position = editor.selection.active;
+    const processedCode = this.processSnippetCode(
+      snippet.code,
+      editor,
+      position
+    );
+
+    // Create preview content
+    const previewContent = [
+      `// Snippet: ${snippet.title}`,
+      `// Language: ${snippet.language}`,
+      `// Description: ${snippet.description || "No description"}`,
+      snippet.tags && snippet.tags.length > 0
+        ? `// Tags: ${snippet.tags.join(", ")}`
+        : "",
+      "",
+      "// Preview (with tab stops and placeholders):",
+      processedCode,
+      "",
+      "// Original code:",
+      snippet.code,
+    ]
+      .filter((line) => line !== "")
+      .join("\n");
+
+    // Show preview in a new document
+    const previewDoc = await vscode.workspace.openTextDocument({
+      content: previewContent,
+      language: snippet.language,
+    });
+
+    await vscode.window.showTextDocument(previewDoc, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preview: true,
+      preserveFocus: true,
+    });
+
+    // Ask user to confirm insertion
+    const choice = await vscode.window.showInformationMessage(
+      `Insert "${snippet.title}" snippet?`,
+      { modal: false },
+      "Insert",
+      "Cancel"
+    );
+
+    // Close preview document
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+    return choice === "Insert";
   }
 
   /**
@@ -545,16 +725,194 @@ export class CommandHandler {
   }
 
   /**
-   * Insert snippet at cursor position
+   * Insert snippet at cursor position with enhanced formatting
    */
   private async insertSnippetAtCursor(
     editor: vscode.TextEditor,
     snippet: SnippetInterface
   ): Promise<void> {
     const position = editor.selection.active;
-    const snippetString = new vscode.SnippetString(snippet.code);
+
+    // Convert snippet code to VS Code snippet format with tab stops and placeholders
+    const processedCode = this.processSnippetCode(
+      snippet.code,
+      editor,
+      position
+    );
+    const snippetString = new vscode.SnippetString(processedCode);
 
     await editor.insertSnippet(snippetString, position);
+  }
+
+  /**
+   * Process snippet code to handle indentation, tab stops, and placeholders
+   */
+  private processSnippetCode(
+    code: string,
+    editor: vscode.TextEditor,
+    position: vscode.Position
+  ): string {
+    // Get current line indentation
+    const currentLine = editor.document.lineAt(position.line);
+    const currentIndentation = this.getIndentation(currentLine.text);
+
+    // Split code into lines
+    const lines = code.split("\n");
+
+    // Process each line
+    const processedLines = lines.map((line, index) => {
+      if (index === 0) {
+        // First line: don't add extra indentation (cursor position handles it)
+        return this.processSnippetSyntax(line);
+      } else {
+        // Subsequent lines: maintain relative indentation and add current indentation
+        const lineIndentation = this.getIndentation(line);
+        const trimmedLine = line.trim();
+
+        if (trimmedLine === "") {
+          return ""; // Empty lines stay empty
+        }
+
+        // Add current indentation plus the line's relative indentation
+        return (
+          currentIndentation +
+          lineIndentation +
+          this.processSnippetSyntax(trimmedLine)
+        );
+      }
+    });
+
+    return processedLines.join("\n");
+  }
+
+  /**
+   * Process snippet syntax to add tab stops and placeholders
+   */
+  private processSnippetSyntax(code: string): string {
+    // Convert common patterns to VS Code snippet syntax
+    let processed = code;
+
+    // Convert ${VARIABLE} to ${1:VARIABLE} for tab stops
+    processed = processed.replace(/\$\{([A-Z_][A-Z0-9_]*)\}/g, "${1:$1}");
+
+    // Convert {{placeholder}} to ${1:placeholder}
+    processed = processed.replace(/\{\{([^}]+)\}\}/g, "${1:$1}");
+
+    // Convert [placeholder] to ${1:placeholder}
+    processed = processed.replace(/\[([^\]]+)\]/g, "${1:$1}");
+
+    // Add a final tab stop at the end if none exist
+    if (!/\$\{\d+/.test(processed) && !/\$0/.test(processed)) {
+      processed += "$0";
+    }
+
+    return processed;
+  }
+
+  /**
+   * Get indentation from a line of text
+   */
+  private getIndentation(text: string): string {
+    const match = text.match(/^(\s*)/);
+    return match ? match[1] : "";
+  }
+
+  /**
+   * Auto-enhance snippet with common placeholder patterns
+   */
+  private autoEnhanceSnippet(code: string): string {
+    let enhanced = code;
+
+    // Common patterns to enhance
+    const patterns = [
+      // Function names
+      { regex: /function\s+(\w+)/g, replacement: "function ${1:$1}" },
+      // Variable names in declarations
+      { regex: /(?:let|const|var)\s+(\w+)/g, replacement: "$& = ${2:value}" },
+      // Class names
+      { regex: /class\s+(\w+)/g, replacement: "class ${1:$1}" },
+      // String literals that look like placeholders
+      { regex: /"([A-Z_][A-Z0-9_]*)"/g, replacement: '"${1:$1}"' },
+      { regex: /'([A-Z_][A-Z0-9_]*)'/g, replacement: "'${1:$1}'" },
+      // Method parameters
+      {
+        regex: /\(([^)]+)\)/g,
+        replacement: (match: string, params: string) => {
+          const paramList = params
+            .split(",")
+            .map((p: string, i: number) => {
+              const trimmed = p.trim();
+              return `\${${i + 1}:${trimmed}}`;
+            })
+            .join(", ");
+          return `(${paramList})`;
+        },
+      },
+    ];
+
+    patterns.forEach((pattern) => {
+      if (typeof pattern.replacement === "string") {
+        enhanced = enhanced.replace(pattern.regex, pattern.replacement);
+      } else {
+        enhanced = enhanced.replace(pattern.regex, pattern.replacement);
+      }
+    });
+
+    // Add final tab stop if none exist
+    if (!/\$\{\d+/.test(enhanced)) {
+      enhanced += "$0";
+    }
+
+    return enhanced;
+  }
+
+  /**
+   * Manual enhancement of snippet with user input
+   */
+  private async manualEnhanceSnippet(code: string): Promise<string | null> {
+    // Show the code in an editor for manual enhancement
+    const doc = await vscode.workspace.openTextDocument({
+      content:
+        code +
+        "\n\n// Add tab stops using ${1:placeholder} syntax\n// Use $0 for final cursor position",
+      language: "plaintext",
+    });
+
+    const editor = await vscode.window.showTextDocument(doc, {
+      viewColumn: vscode.ViewColumn.Beside,
+      preview: false,
+    });
+
+    const choice = await vscode.window.showInformationMessage(
+      'Edit the snippet to add tab stops and placeholders, then click "Done"',
+      { modal: false },
+      "Done",
+      "Cancel"
+    );
+
+    if (choice !== "Done") {
+      await vscode.commands.executeCommand(
+        "workbench.action.closeActiveEditor"
+      );
+      return null;
+    }
+
+    // Get the edited content
+    const editedContent = editor.document.getText();
+    const lines = editedContent.split("\n");
+
+    // Remove the instruction lines
+    const codeLines = [];
+    for (const line of lines) {
+      if (line.startsWith("// Add tab stops") || line.startsWith("// Use $0")) {
+        break;
+      }
+      codeLines.push(line);
+    }
+
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+    return codeLines.join("\n").trim();
   }
 
   /**
