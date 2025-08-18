@@ -161,3 +161,8 @@ export type Result<T> =
       success: false;
       error: SnippetError;
     };
+
+// Type aliases for backward compatibility and cleaner imports
+export type Snippet = SnippetInterface;
+export type SearchQuery = SearchQueryInterface;
+export type StorageConfig = StorageConfigInterface;

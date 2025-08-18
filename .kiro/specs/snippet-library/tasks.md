@@ -84,7 +84,7 @@
   - **Commit all import/export functionality files to version control**
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [-] 10. Implement snippet management commands
+- [x] 10. Implement snippet management commands
 
   - Create edit snippet command with metadata modification
   - Implement delete snippet with confirmation dialog
@@ -94,7 +94,7 @@
   - **Commit all snippet management command files to version control**
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 11. Set up web GUI server foundation
+- [x] 11. Set up web GUI server foundation
 
   - Create Express.js server with TypeScript configuration
   - Implement REST API endpoints for snippet CRUD operations
@@ -104,7 +104,7 @@
   - **Commit all web GUI server foundation files to version control**
   - _Requirements: 14.1, 14.2, 15.2, 15.3_
 
-- [ ] 12. Build web GUI API layer
+- [x] 12. Build web GUI API layer
 
   - Implement all REST endpoints (/api/snippets with full CRUD)
   - Add search endpoint with query parameter support
