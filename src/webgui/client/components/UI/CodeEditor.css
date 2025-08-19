@@ -1,0 +1,125 @@
+.code-editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.code-editor-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.code-editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.code-editor-controls {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.code-editor-toggle {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.code-editor-toggle:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.code-editor-toggle.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.code-editor-info {
+  display: flex;
+  gap: var(--spacing-md);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.code-editor-language {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.code-editor {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  overflow: hidden;
+  background-color: var(--color-bg-secondary);
+}
+
+.code-editor--error {
+  border-color: var(--color-error);
+}
+
+.code-editor-textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: vertical;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  min-height: 200px;
+}
+
+.code-editor-textarea::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.code-editor-preview {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.code-editor-preview pre {
+  margin: 0 !important;
+  padding: var(--spacing-md) !important;
+}
+
+.code-editor-error {
+  color: var(--color-error);
+  font-size: 12px;
+  margin-top: var(--spacing-xs);
+  display: block;
+}
+
+/* Scrollbar styling for preview */
+.code-editor-preview::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.code-editor-preview::-webkit-scrollbar-track {
+  background: var(--color-bg-tertiary);
+}
+
+.code-editor-preview::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.code-editor-preview::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}

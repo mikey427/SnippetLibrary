@@ -144,7 +144,7 @@
   - **Commit all advanced search interface files to version control**
   - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
-- [-] 16. Build bulk operations interface
+- [x] 16. Build bulk operations interface
 
   - Create multi-select functionality for snippet grid
   - Implement bulk actions toolbar (delete, tag, categorize)
@@ -154,7 +154,7 @@
   - **Commit all bulk operations interface files to version control**
   - _Requirements: 13.1, 13.2, 13.3, 13.4_
 
-- [ ] 17. Implement snippet editor interface
+- [-] 17. Implement snippet editor interface
 
   - Create SnippetEditor component with form validation
   - Add code editor with syntax highlighting and validation

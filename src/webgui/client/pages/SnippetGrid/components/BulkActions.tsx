@@ -11,6 +11,7 @@ import { RootState } from "../../../store/store";
 import { Snippet } from "../../../../types";
 import Button from "../../../components/UI/Button";
 import "./BulkActions.css";
+import { window } from "vscode";
 
 interface BulkActionsProps {
   selectedIds: string[];
