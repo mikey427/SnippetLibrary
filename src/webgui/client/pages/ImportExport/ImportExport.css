@@ -1,0 +1,16 @@
+.import-export-page {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.import-export-page h2 {
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text);
+}
+
+.import-export-page p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}

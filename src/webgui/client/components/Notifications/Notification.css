@@ -1,0 +1,66 @@
+.notification {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  background-color: var(--color-bg);
+  border-left: 4px solid;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification--success {
+  border-left-color: var(--color-success);
+}
+
+.notification--error {
+  border-left-color: var(--color-danger);
+}
+
+.notification--warning {
+  border-left-color: var(--color-warning);
+}
+
+.notification--info {
+  border-left-color: var(--color-info);
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.notification-icon {
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.notification-message {
+  flex: 1;
+  font-size: var(--font-size-md);
+  line-height: 1.4;
+}
+
+.notification-dismiss {
+  margin-left: var(--spacing-sm);
+  padding: 0;
+  min-height: auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

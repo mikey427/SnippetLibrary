@@ -1,0 +1,32 @@
+.snippet-editor {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.snippet-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.snippet-editor-header h2 {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.snippet-form {
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.snippet-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
