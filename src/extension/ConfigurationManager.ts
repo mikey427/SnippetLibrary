@@ -95,6 +95,29 @@ export class ConfigurationManager {
   }
 
   /**
+   * Get complete web GUI configuration
+   */
+  getWebGUIConfig(): {
+    port: number;
+    host: string;
+    autoStart: boolean;
+    autoShutdown: boolean;
+    openInBrowser: boolean;
+  } {
+    const config = vscode.workspace.getConfiguration(
+      ConfigurationManager.CONFIGURATION_SECTION
+    );
+
+    return {
+      port: config.get<number>("webGUIPort", 3000),
+      host: config.get<string>("webGUIHost", "localhost"),
+      autoStart: config.get<boolean>("webGUIAutoStart", false),
+      autoShutdown: config.get<boolean>("webGUIAutoShutdown", true),
+      openInBrowser: config.get<boolean>("webGUIOpenInBrowser", true),
+    };
+  }
+
+  /**
    * Update a configuration value
    */
   async updateConfig<T>(

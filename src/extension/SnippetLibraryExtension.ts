@@ -13,6 +13,7 @@ import {
   SynchronizationCoordinator,
   SynchronizationCoordinatorImpl,
 } from "../core/services/SynchronizationCoordinator";
+import { WebGUILauncher, WebGUILauncherConfig } from "./WebGUILauncher";
 
 /**
  * Main extension class that coordinates all VS Code integration
@@ -24,6 +25,7 @@ export class SnippetLibraryExtension {
   private vscodeIntegration: VSCodeSnippetIntegration;
   private configManager: ConfigurationManager;
   private syncCoordinator: SynchronizationCoordinator;
+  private webGUILauncher: WebGUILauncher;
   private disposables: vscode.Disposable[] = [];
 
   constructor(context: vscode.ExtensionContext) {
@@ -36,6 +38,22 @@ export class SnippetLibraryExtension {
 
     // Initialize synchronization coordinator
     this.syncCoordinator = new SynchronizationCoordinatorImpl();
+
+    // Initialize web GUI launcher
+    const webGUIConfig: WebGUILauncherConfig = {
+      port: this.configManager.getWebGUIConfig().port,
+      host: this.configManager.getWebGUIConfig().host,
+      autoStart: this.configManager.getWebGUIConfig().autoStart,
+      autoShutdown: this.configManager.getWebGUIConfig().autoShutdown,
+      openInBrowser: this.configManager.getWebGUIConfig().openInBrowser,
+      healthCheckInterval: 30000, // 30 seconds
+      maxStartupRetries: 3,
+    };
+
+    this.webGUILauncher = new WebGUILauncher(webGUIConfig, {
+      snippetManager: this.snippetManager,
+      syncCoordinator: this.syncCoordinator,
+    });
 
     // Initialize integration components
     this.commandHandler = new CommandHandler(
@@ -66,6 +84,9 @@ export class SnippetLibraryExtension {
 
       // Initialize synchronization coordinator
       await this.initializeSynchronization();
+
+      // Initialize web GUI launcher
+      await this.webGUILauncher.initialize();
 
       // Set up configuration change listener
       this.setupConfigurationListener();
@@ -111,6 +132,23 @@ export class SnippetLibraryExtension {
       vscode.commands.registerCommand(
         "snippetLibrary.trackUsage",
         (snippetId: string) => this.trackSnippetUsage(snippetId)
+      ),
+      // Web GUI commands
+      vscode.commands.registerCommand("snippetLibrary.launchWebGUI", () =>
+        this.webGUILauncher.launchWebGUI()
+      ),
+      vscode.commands.registerCommand("snippetLibrary.startWebGUIServer", () =>
+        this.webGUILauncher.startServer()
+      ),
+      vscode.commands.registerCommand("snippetLibrary.stopWebGUIServer", () =>
+        this.webGUILauncher.stopServer()
+      ),
+      vscode.commands.registerCommand(
+        "snippetLibrary.restartWebGUIServer",
+        () => this.webGUILauncher.restartServer()
+      ),
+      vscode.commands.registerCommand("snippetLibrary.webGUIStatus", () =>
+        this.showWebGUIStatus()
       ),
     ];
 
@@ -360,6 +398,57 @@ export class SnippetLibraryExtension {
   }
 
   /**
+   * Show web GUI status information
+   */
+  private async showWebGUIStatus(): Promise<void> {
+    try {
+      const status = await this.webGUILauncher.getServerStatus();
+
+      let message = `Web GUI Server Status:\n`;
+      message += `Running: ${status.running ? "Yes" : "No"}\n`;
+
+      if (status.running) {
+        message += `URL: ${status.url}\n`;
+        message += `Healthy: ${status.healthy ? "Yes" : "No"}\n`;
+      }
+
+      const actions: string[] = [];
+
+      if (status.running) {
+        actions.push("Open in Browser", "Stop Server", "Restart Server");
+      } else {
+        actions.push("Start Server");
+      }
+
+      const action = await vscode.window.showInformationMessage(
+        message,
+        ...actions
+      );
+
+      switch (action) {
+        case "Start Server":
+          await this.webGUILauncher.startServer();
+          break;
+        case "Stop Server":
+          await this.webGUILauncher.stopServer();
+          break;
+        case "Restart Server":
+          await this.webGUILauncher.restartServer();
+          break;
+        case "Open in Browser":
+          await this.webGUILauncher.openInBrowser();
+          break;
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Failed to get web GUI status: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
+  }
+
+  /**
    * Dispose of all resources
    */
   async dispose(): Promise<void> {
@@ -386,6 +475,10 @@ export class SnippetLibraryExtension {
 
       if (this.syncCoordinator) {
         this.syncCoordinator.dispose();
+      }
+
+      if (this.webGUILauncher) {
+        await this.webGUILauncher.dispose();
       }
 
       this.disposables = [];

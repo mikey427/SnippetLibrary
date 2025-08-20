@@ -674,12 +674,12 @@ export class CommandHandler {
   }
 
   /**
-   * Open web GUI (placeholder for now)
+   * Open web GUI
    */
   async openWebGUI(): Promise<void> {
-    vscode.window.showInformationMessage(
-      "Web GUI functionality will be implemented in a later task."
-    );
+    // This will be handled by the WebGUILauncher in the extension
+    // The CommandHandler doesn't directly manage the launcher
+    vscode.commands.executeCommand("snippetLibrary.launchWebGUI");
   }
 
   /**
