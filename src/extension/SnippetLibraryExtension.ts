@@ -9,6 +9,10 @@ import { SnippetInterface, StorageConfigInterface } from "../types";
 import { CommandHandler } from "./CommandHandler";
 import { VSCodeSnippetIntegration } from "./VSCodeSnippetIntegration";
 import { ConfigurationManager } from "./ConfigurationManager";
+import {
+  SynchronizationCoordinator,
+  SynchronizationCoordinatorImpl,
+} from "../core/services/SynchronizationCoordinator";
 
 /**
  * Main extension class that coordinates all VS Code integration
@@ -19,6 +23,7 @@ export class SnippetLibraryExtension {
   private commandHandler: CommandHandler;
   private vscodeIntegration: VSCodeSnippetIntegration;
   private configManager: ConfigurationManager;
+  private syncCoordinator: SynchronizationCoordinator;
   private disposables: vscode.Disposable[] = [];
 
   constructor(context: vscode.ExtensionContext) {
@@ -28,6 +33,9 @@ export class SnippetLibraryExtension {
     // Initialize storage service based on configuration
     const storageService = this.createStorageService();
     this.snippetManager = new SnippetManagerImpl(storageService);
+
+    // Initialize synchronization coordinator
+    this.syncCoordinator = new SynchronizationCoordinatorImpl();
 
     // Initialize integration components
     this.commandHandler = new CommandHandler(
@@ -55,6 +63,9 @@ export class SnippetLibraryExtension {
 
       // Initialize VS Code snippet integration
       await this.vscodeIntegration.initialize();
+
+      // Initialize synchronization coordinator
+      await this.initializeSynchronization();
 
       // Set up configuration change listener
       this.setupConfigurationListener();
@@ -162,6 +173,138 @@ export class SnippetLibraryExtension {
   }
 
   /**
+   * Initialize synchronization coordinator
+   */
+  private async initializeSynchronization(): Promise<void> {
+    try {
+      const config = this.configManager.getStorageConfig();
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+
+      let watchPath = "";
+      if (config.location === "workspace" && workspaceFolder) {
+        watchPath = `${workspaceFolder.uri.fsPath}/.vscode/snippets`;
+      } else {
+        // For global storage, we'd need to determine the global path
+        // For now, skip file watching for global storage
+        watchPath = "";
+      }
+
+      const syncConfig = {
+        sync: {
+          enableFileWatching: true,
+          enableWebSocketSync: true,
+          conflictResolution: "prompt_user" as const,
+          maxRetries: 3,
+        },
+        fileWatcher: {
+          watchPath,
+          debounceMs: 1000,
+          recursive: true,
+          ignorePatterns: [".git", "node_modules", ".tmp", "~"],
+        },
+        webSocket: {
+          heartbeatInterval: 30000,
+          clientTimeout: 60000,
+          maxClients: 10,
+        },
+        enableAutoSync: true,
+        enableConflictResolution: true,
+        syncInterval: 30000, // 30 seconds
+      };
+
+      const result = await this.syncCoordinator.initialize(
+        syncConfig,
+        this.snippetManager
+      );
+
+      if (result.success) {
+        await this.syncCoordinator.start();
+
+        // Set up sync event handlers
+        this.setupSyncEventHandlers();
+
+        console.log("Synchronization coordinator initialized successfully");
+      } else {
+        console.warn(
+          "Failed to initialize synchronization:",
+          result.error.message
+        );
+      }
+    } catch (error) {
+      console.error("Error initializing synchronization:", error);
+    }
+  }
+
+  /**
+   * Set up synchronization event handlers
+   */
+  private setupSyncEventHandlers(): void {
+    // Handle sync events
+    this.syncCoordinator.onSyncEvent((event) => {
+      console.log("Sync event:", event);
+
+      if (event.type === "sync_failed") {
+        vscode.window.showWarningMessage(
+          `Synchronization failed: ${event.data.error}`
+        );
+      }
+    });
+
+    // Handle conflict detection
+    this.syncCoordinator.onConflictDetected((conflict) => {
+      console.log("Conflict detected:", conflict);
+
+      // Show conflict notification to user
+      this.showConflictNotification(conflict);
+    });
+  }
+
+  /**
+   * Show conflict notification and handle user response
+   */
+  private async showConflictNotification(conflict: any): Promise<void> {
+    const action = await vscode.window.showWarningMessage(
+      `Snippet conflict detected for "${conflict.localSnippet.title}". How would you like to resolve it?`,
+      "Use Local Version",
+      "Use Remote Version",
+      "Merge Changes",
+      "Resolve Later"
+    );
+
+    if (action && action !== "Resolve Later") {
+      let strategy;
+      switch (action) {
+        case "Use Local Version":
+          strategy = { type: "local_wins" as const };
+          break;
+        case "Use Remote Version":
+          strategy = { type: "remote_wins" as const };
+          break;
+        case "Merge Changes":
+          strategy = { type: "merge" as const };
+          break;
+        default:
+          return;
+      }
+
+      const result = await this.syncCoordinator.resolveConflict(
+        conflict.id,
+        strategy
+      );
+      if (result.success) {
+        vscode.window.showInformationMessage("Conflict resolved successfully");
+
+        // Refresh VS Code snippets
+        await this.vscodeIntegration.refreshSnippets();
+      } else {
+        vscode.window.showErrorMessage(
+          `Failed to resolve conflict: ${result.error.message}`
+        );
+      }
+    }
+  }
+
+  /**
    * Create storage service based on current configuration
    */
   private createStorageService() {
@@ -239,6 +382,10 @@ export class SnippetLibraryExtension {
 
       if (this.commandHandler) {
         this.commandHandler.dispose();
+      }
+
+      if (this.syncCoordinator) {
+        this.syncCoordinator.dispose();
       }
 
       this.disposables = [];

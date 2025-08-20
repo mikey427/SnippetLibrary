@@ -11,6 +11,7 @@ import {
   ExportData,
   ExportFilter,
 } from "../../types";
+import { SynchronizationCoordinator } from "../../core/services/SynchronizationCoordinator";
 
 export interface WebGUIServerConfig {
   port: number;
@@ -20,6 +21,7 @@ export interface WebGUIServerConfig {
 
 export interface WebGUIServerDependencies {
   snippetManager: SnippetManager;
+  syncCoordinator?: SynchronizationCoordinator;
 }
 
 export class WebGUIServer {
@@ -211,6 +213,14 @@ export class WebGUIServer {
       // Emit real-time update
       this.emitSnippetUpdate("created", snippet);
 
+      // Notify synchronization coordinator
+      if (this.dependencies.syncCoordinator) {
+        await this.dependencies.syncCoordinator.handleWebGUIUpdate(
+          snippet,
+          "created"
+        );
+      }
+
       res.status(201).json(snippet);
     } catch (error) {
       next(error);
@@ -253,6 +263,14 @@ export class WebGUIServer {
       // Emit real-time update
       this.emitSnippetUpdate("updated", snippet);
 
+      // Notify synchronization coordinator
+      if (this.dependencies.syncCoordinator) {
+        await this.dependencies.syncCoordinator.handleWebGUIUpdate(
+          snippet,
+          "updated"
+        );
+      }
+
       res.json(snippet);
     } catch (error) {
       next(error);
@@ -280,6 +298,14 @@ export class WebGUIServer {
       // Emit real-time update
       if (snippet) {
         this.emitSnippetUpdate("deleted", snippet);
+
+        // Notify synchronization coordinator
+        if (this.dependencies.syncCoordinator) {
+          await this.dependencies.syncCoordinator.handleWebGUIUpdate(
+            snippet,
+            "deleted"
+          );
+        }
       }
 
       res.status(204).send();

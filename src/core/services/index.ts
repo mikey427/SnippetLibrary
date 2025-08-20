@@ -35,6 +35,41 @@ export {
   FileFormat,
 } from "./ImportExportService";
 
+// Export synchronization services
+export {
+  SynchronizationService,
+  SynchronizationServiceImpl,
+  SyncConfig,
+  SyncEvent,
+} from "./SynchronizationService";
+export {
+  FileSystemWatcher,
+  FileSystemWatcherImpl,
+  FileWatcherConfig,
+  FileChangeEvent,
+} from "./FileSystemWatcher";
+export {
+  WebSocketSyncService,
+  WebSocketSyncServiceImpl,
+  WebSocketSyncConfig,
+  WebSocketMessage,
+  WebSocketClient,
+} from "./WebSocketSyncService";
+export {
+  ConflictResolutionService,
+  ConflictResolutionServiceImpl,
+  ConflictType,
+  Conflict,
+  ResolutionStrategy,
+  ResolutionResult,
+} from "./ConflictResolutionService";
+export {
+  SynchronizationCoordinator,
+  SynchronizationCoordinatorImpl,
+  SyncCoordinatorConfig,
+  SyncStatus,
+} from "./SynchronizationCoordinator";
+
 // Export factory functions
 import { FileSystemStorageService } from "./FileSystemStorageService";
 import { StorageConfigInterface } from "../../types";
