@@ -288,8 +288,15 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "test:unit": "vitest run",
-    "test:watch": "vitest"
+    "test:unit": "vitest run src/**/*.test.ts src/**/*.test.tsx --exclude src/**/__tests__/integration/** --exclude src/**/__tests__/e2e/** --exclude src/__tests__/performance/** --exclude src/__tests__/compatibility/**",
+    "test:integration": "vitest run src/**/__tests__/integration/**/*.test.ts --testTimeout=30000",
+    "test:e2e": "vitest run src/**/__tests__/e2e/**/*.test.tsx --environment=jsdom --testTimeout=60000",
+    "test:performance": "vitest run src/__tests__/performance/**/*.test.ts --testTimeout=120000",
+    "test:compatibility": "vitest run src/__tests__/compatibility/**/*.test.ts --testTimeout=60000",
+    "test:comprehensive": "node scripts/test-ci.js",
+    "test:coverage": "node scripts/test-coverage.js",
+    "test:watch": "vitest",
+    "test:ci": "vitest run --config vitest.config.comprehensive.ts"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.7.0",
