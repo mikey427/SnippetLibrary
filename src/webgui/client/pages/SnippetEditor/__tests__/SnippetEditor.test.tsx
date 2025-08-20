@@ -8,6 +8,28 @@ import { vi } from "vitest";
 import SnippetEditor from "../SnippetEditor";
 import snippetsSlice from "../../../store/slices/snippetsSlice";
 import uiSlice from "../../../store/slices/uiSlice";
+import { it } from "node:test";
+import { it } from "node:test";
+import { describe } from "node:test";
+import { it } from "node:test";
+import { describe } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { describe } from "node:test";
+import { it } from "node:test";
+import { describe } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { describe } from "node:test";
+import { beforeEach } from "node:test";
+import { describe } from "node:test";
+import { window } from "vscode";
 
 // Mock the API
 vi.mock("../../../services/api", () => ({

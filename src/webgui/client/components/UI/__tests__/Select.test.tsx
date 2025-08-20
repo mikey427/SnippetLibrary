@@ -3,6 +3,20 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import Select from "../Select";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { it } from "node:test";
+import { describe } from "node:test";
 
 describe("Select", () => {
   const defaultOptions = [
