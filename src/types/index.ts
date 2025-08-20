@@ -55,6 +55,71 @@ export interface StorageConfigInterface {
   format: "json" | "yaml";
   autoBackup: boolean;
   backupInterval: number;
+  maxBackups?: number;
+}
+
+/**
+ * Web GUI configuration
+ */
+export interface WebGUIConfig {
+  port: number;
+  host: string;
+  autoStart: boolean;
+  autoShutdown: boolean;
+  openInBrowser: boolean;
+  theme: "auto" | "light" | "dark";
+}
+
+/**
+ * Keybinding configuration
+ */
+export interface KeybindingConfig {
+  saveSnippet: string;
+  insertSnippet: string;
+  manageSnippets: string;
+  openWebGUI: string;
+  quickSearch: string;
+}
+
+/**
+ * Editor integration configuration
+ */
+export interface EditorConfig {
+  enableIntelliSense: boolean;
+  enableAutoComplete: boolean;
+  showPreview: boolean;
+  insertMode: "replace" | "insert";
+}
+
+/**
+ * Search configuration
+ */
+export interface SearchConfig {
+  fuzzySearch: boolean;
+  caseSensitive: boolean;
+  maxResults: number;
+  searchHistory: boolean;
+}
+
+/**
+ * Notification configuration
+ */
+export interface NotificationConfig {
+  showSaveConfirmation: boolean;
+  showImportSummary: boolean;
+  showBackupNotifications: boolean;
+}
+
+/**
+ * Complete extension configuration
+ */
+export interface ExtensionConfig {
+  storage: StorageConfigInterface;
+  webGUI: WebGUIConfig;
+  keybindings: KeybindingConfig;
+  editor: EditorConfig;
+  search: SearchConfig;
+  notifications: NotificationConfig;
 }
 
 /**

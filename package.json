@@ -19,22 +19,32 @@
       {
         "command": "snippetLibrary.saveSnippet",
         "title": "Save as Snippet",
-        "category": "Snippet Library"
+        "category": "Snippet Library",
+        "icon": "$(save)"
       },
       {
         "command": "snippetLibrary.insertSnippet",
         "title": "Insert Snippet",
-        "category": "Snippet Library"
+        "category": "Snippet Library",
+        "icon": "$(insert)"
       },
       {
         "command": "snippetLibrary.manageSnippets",
         "title": "Manage Snippets",
-        "category": "Snippet Library"
+        "category": "Snippet Library",
+        "icon": "$(list-unordered)"
       },
       {
         "command": "snippetLibrary.openWebGUI",
         "title": "Open Web GUI",
-        "category": "Snippet Library"
+        "category": "Snippet Library",
+        "icon": "$(browser)"
+      },
+      {
+        "command": "snippetLibrary.quickSearch",
+        "title": "Quick Search Snippets",
+        "category": "Snippet Library",
+        "icon": "$(search)"
       }
     ],
     "keybindings": [
@@ -48,6 +58,21 @@
         "command": "snippetLibrary.insertSnippet",
         "key": "ctrl+shift+i",
         "mac": "cmd+shift+i"
+      },
+      {
+        "command": "snippetLibrary.manageSnippets",
+        "key": "ctrl+shift+m",
+        "mac": "cmd+shift+m"
+      },
+      {
+        "command": "snippetLibrary.openWebGUI",
+        "key": "ctrl+shift+w",
+        "mac": "cmd+shift+w"
+      },
+      {
+        "command": "snippetLibrary.quickSearch",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f"
       }
     ],
     "configuration": {
@@ -60,7 +85,11 @@
             "global"
           ],
           "default": "global",
-          "description": "Where to store snippets"
+          "description": "Where to store snippets",
+          "enumDescriptions": [
+            "Store snippets in the current workspace (.vscode/snippets/)",
+            "Store snippets globally for all workspaces"
+          ]
         },
         "snippetLibrary.storageFormat": {
           "type": "string",
@@ -71,10 +100,180 @@
           "default": "json",
           "description": "File format for snippet storage"
         },
+        "snippetLibrary.customStoragePath": {
+          "type": "string",
+          "description": "Custom path for snippet storage (overrides storageLocation if set)"
+        },
         "snippetLibrary.autoBackup": {
           "type": "boolean",
           "default": true,
           "description": "Automatically backup snippets"
+        },
+        "snippetLibrary.backupInterval": {
+          "type": "number",
+          "default": 86400000,
+          "minimum": 300000,
+          "description": "Backup interval in milliseconds (minimum: 5 minutes)"
+        },
+        "snippetLibrary.maxBackups": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Maximum number of backup files to keep"
+        },
+        "snippetLibrary.webGUI": {
+          "type": "object",
+          "description": "Web GUI configuration",
+          "properties": {
+            "port": {
+              "type": "number",
+              "default": 3000,
+              "minimum": 1024,
+              "maximum": 65535,
+              "description": "Port for the web GUI server"
+            },
+            "host": {
+              "type": "string",
+              "default": "localhost",
+              "description": "Host for the web GUI server"
+            },
+            "autoStart": {
+              "type": "boolean",
+              "default": false,
+              "description": "Automatically start web GUI server on extension activation"
+            },
+            "autoShutdown": {
+              "type": "boolean",
+              "default": true,
+              "description": "Automatically shutdown web GUI server when VS Code closes"
+            },
+            "openInBrowser": {
+              "type": "boolean",
+              "default": true,
+              "description": "Automatically open web GUI in browser when started"
+            },
+            "theme": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "light",
+                "dark"
+              ],
+              "default": "auto",
+              "description": "Web GUI theme preference"
+            }
+          }
+        },
+        "snippetLibrary.keybindings": {
+          "type": "object",
+          "description": "Custom keybinding configuration",
+          "properties": {
+            "saveSnippet": {
+              "type": "string",
+              "default": "ctrl+shift+s",
+              "description": "Keybinding for saving selected code as snippet"
+            },
+            "insertSnippet": {
+              "type": "string",
+              "default": "ctrl+shift+i",
+              "description": "Keybinding for inserting a snippet"
+            },
+            "manageSnippets": {
+              "type": "string",
+              "default": "ctrl+shift+m",
+              "description": "Keybinding for opening snippet management"
+            },
+            "openWebGUI": {
+              "type": "string",
+              "default": "ctrl+shift+w",
+              "description": "Keybinding for opening web GUI"
+            },
+            "quickSearch": {
+              "type": "string",
+              "default": "ctrl+shift+f",
+              "description": "Keybinding for quick snippet search"
+            }
+          }
+        },
+        "snippetLibrary.editor": {
+          "type": "object",
+          "description": "Editor integration preferences",
+          "properties": {
+            "enableIntelliSense": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable snippet suggestions in IntelliSense"
+            },
+            "enableAutoComplete": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable automatic snippet completion"
+            },
+            "showPreview": {
+              "type": "boolean",
+              "default": true,
+              "description": "Show snippet preview in completion items"
+            },
+            "insertMode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "insert"
+              ],
+              "default": "insert",
+              "description": "How to insert snippets when text is selected"
+            }
+          }
+        },
+        "snippetLibrary.search": {
+          "type": "object",
+          "description": "Search and filtering preferences",
+          "properties": {
+            "fuzzySearch": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable fuzzy search matching"
+            },
+            "caseSensitive": {
+              "type": "boolean",
+              "default": false,
+              "description": "Case sensitive search by default"
+            },
+            "maxResults": {
+              "type": "number",
+              "default": 50,
+              "minimum": 10,
+              "maximum": 500,
+              "description": "Maximum number of search results to display"
+            },
+            "searchHistory": {
+              "type": "boolean",
+              "default": true,
+              "description": "Remember search history"
+            }
+          }
+        },
+        "snippetLibrary.notifications": {
+          "type": "object",
+          "description": "Notification preferences",
+          "properties": {
+            "showSaveConfirmation": {
+              "type": "boolean",
+              "default": true,
+              "description": "Show confirmation when snippet is saved"
+            },
+            "showImportSummary": {
+              "type": "boolean",
+              "default": true,
+              "description": "Show summary after importing snippets"
+            },
+            "showBackupNotifications": {
+              "type": "boolean",
+              "default": false,
+              "description": "Show notifications when backups are created"
+            }
+          }
         }
       }
     }
