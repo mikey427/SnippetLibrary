@@ -587,4 +587,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Happy Coding!** 🚀
 
-For more information, visit our [documentation site](link-to-docs) or join our [community discussions](link-to-discussions).
+For more information, check out the documentation files in this repository.

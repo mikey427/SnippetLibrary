@@ -3,6 +3,11 @@
   "displayName": "Snippet Library",
   "description": "A developer productivity tool for managing reusable code snippets",
   "version": "0.0.1",
+  "publisher": "snippet-library",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/snippet-library.git"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -24,9 +29,15 @@
       },
       {
         "command": "snippetLibrary.insertSnippet",
-        "title": "Insert Snippet",
+        "title": "Insert Snippet (with Preview)",
         "category": "Snippet Library",
         "icon": "$(insert)"
+      },
+      {
+        "command": "snippetLibrary.quickInsertSnippet",
+        "title": "Quick Insert Snippet",
+        "category": "Snippet Library",
+        "icon": "$(zap)"
       },
       {
         "command": "snippetLibrary.manageSnippets",
@@ -58,6 +69,11 @@
         "command": "snippetLibrary.insertSnippet",
         "key": "ctrl+shift+i",
         "mac": "cmd+shift+i"
+      },
+      {
+        "command": "snippetLibrary.quickInsertSnippet",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i"
       },
       {
         "command": "snippetLibrary.manageSnippets",

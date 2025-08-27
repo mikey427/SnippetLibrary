@@ -185,6 +185,11 @@ export class CommandHandler {
         return;
       }
 
+      // Store original editor and cursor position
+      const originalEditor = editor;
+      const originalPosition = editor.selection.active;
+      const originalDocument = editor.document;
+
       // Get all snippets
       const result = await this.snippetManager.getAllSnippets();
       if (!result.success) {
@@ -232,7 +237,7 @@ export class CommandHandler {
       // Show enhanced quick pick with preview
       const selected = await vscode.window.showQuickPick(quickPickItems, {
         placeHolder:
-          "Select a snippet to insert (filtered by current language)",
+          "Select a snippet to insert (Press Enter to insert, Escape to cancel)",
         matchOnDescription: true,
         matchOnDetail: true,
         ignoreFocusOut: false,
@@ -242,17 +247,35 @@ export class CommandHandler {
         return; // User cancelled
       }
 
-      // Show preview before insertion
-      const shouldInsert = await this.showSnippetPreview(
+      // Show preview with improved UX
+      const shouldInsert = await this.showEnhancedSnippetPreview(
         selected.snippet,
-        editor
+        originalEditor,
+        originalPosition
       );
+
       if (!shouldInsert) {
         return; // User cancelled after preview
       }
 
-      // Insert the snippet
-      await this.insertSnippetAtCursor(editor, selected.snippet);
+      // Ensure we're back to the original editor before inserting
+      await this.ensureOriginalEditorActive(originalDocument, originalPosition);
+
+      // Get the current active editor (should be the original one)
+      const currentEditor = vscode.window.activeTextEditor;
+      if (!currentEditor || currentEditor.document !== originalDocument) {
+        vscode.window.showErrorMessage(
+          "Could not return to original editor. Please try again."
+        );
+        return;
+      }
+
+      // Insert the snippet at the original position
+      await this.insertSnippetAtCursor(
+        currentEditor,
+        selected.snippet,
+        originalPosition
+      );
 
       // Increment usage count
       await this.snippetManager.incrementUsage(selected.snippet.id);
@@ -320,32 +343,47 @@ export class CommandHandler {
   }
 
   /**
-   * Show snippet preview before insertion
+   * Show enhanced snippet preview with better UX
    */
-  private async showSnippetPreview(
+  private async showEnhancedSnippetPreview(
     snippet: SnippetInterface,
-    editor: vscode.TextEditor
+    originalEditor: vscode.TextEditor,
+    originalPosition: vscode.Position
   ): Promise<boolean> {
-    const position = editor.selection.active;
     const processedCode = this.processSnippetCode(
       snippet.code,
-      editor,
-      position
+      originalEditor,
+      originalPosition
     );
 
-    // Create preview content
+    // Create preview content showing how it will look at cursor position
+    const originalLine = originalEditor.document.lineAt(originalPosition.line);
+    const beforeCursor = originalLine.text.substring(
+      0,
+      originalPosition.character
+    );
+    const afterCursor = originalLine.text.substring(originalPosition.character);
+
     const previewContent = [
-      `// Snippet: ${snippet.title}`,
+      `// Snippet Preview: ${snippet.title}`,
       `// Language: ${snippet.language}`,
       `// Description: ${snippet.description || "No description"}`,
       snippet.tags && snippet.tags.length > 0
         ? `// Tags: ${snippet.tags.join(", ")}`
         : "",
       "",
-      "// Preview (with tab stops and placeholders):",
-      processedCode,
+      "// How it will look at your cursor position:",
+      "// ↓ Current line with cursor position marked",
+      `${beforeCursor}█${afterCursor}`,
       "",
-      "// Original code:",
+      "// ↓ After insertion:",
+      beforeCursor +
+        processedCode.split("\n")[0] +
+        (processedCode.includes("\n") ? "" : afterCursor),
+      ...processedCode.split("\n").slice(1),
+      ...(processedCode.includes("\n") && afterCursor ? [afterCursor] : []),
+      "",
+      "// ↓ Raw snippet code:",
       snippet.code,
     ]
       .filter((line) => line !== "")
@@ -360,21 +398,124 @@ export class CommandHandler {
     await vscode.window.showTextDocument(previewDoc, {
       viewColumn: vscode.ViewColumn.Beside,
       preview: true,
-      preserveFocus: true,
+      preserveFocus: false, // Focus the preview so user can see it clearly
     });
 
-    // Ask user to confirm insertion
+    // Enhanced confirmation with keyboard shortcuts
     const choice = await vscode.window.showInformationMessage(
-      `Insert "${snippet.title}" snippet?`,
-      { modal: false },
-      "Insert",
-      "Cancel"
+      `Insert "${snippet.title}" at cursor position?`,
+      { modal: true }, // Make it modal for better keyboard interaction
+      {
+        title: "Insert (Enter)",
+        isCloseAffordance: false,
+      },
+      {
+        title: "Cancel (Escape)",
+        isCloseAffordance: true,
+      }
     );
 
     // Close preview document
     await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 
-    return choice === "Insert";
+    return choice?.title.startsWith("Insert") ?? false;
+  }
+
+  /**
+   * Quick insert snippet without preview (for faster workflow)
+   */
+  async quickInsertSnippet(): Promise<void> {
+    try {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showWarningMessage(
+          "No active editor found. Please open a file to insert snippet."
+        );
+        return;
+      }
+
+      // Store original editor and cursor position
+      const originalPosition = editor.selection.active;
+
+      // Get all snippets
+      const result = await this.snippetManager.getAllSnippets();
+      if (!result.success) {
+        vscode.window.showErrorMessage(
+          `Failed to load snippets: ${result.error.message}`
+        );
+        return;
+      }
+
+      const snippets = result.data;
+      if (snippets.length === 0) {
+        vscode.window.showInformationMessage(
+          "No snippets found. Create some snippets first!"
+        );
+        return;
+      }
+
+      // Filter snippets by current language if available
+      const currentLanguage = editor.document.languageId;
+      const relevantSnippets = this.filterSnippetsByRelevance(
+        snippets,
+        currentLanguage
+      );
+
+      // Create quick pick items
+      const quickPickItems: (vscode.QuickPickItem & {
+        snippet: SnippetInterface;
+      })[] = relevantSnippets.map((snippet) => {
+        const codePreview = this.createCodePreview(snippet.code);
+        const tags =
+          snippet.tags.length > 0 ? ` • ${snippet.tags.join(", ")}` : "";
+        const usageInfo =
+          snippet.usageCount > 0 ? ` • Used ${snippet.usageCount} times` : "";
+
+        return {
+          label: `$(file-code) ${snippet.title}`,
+          description: `${snippet.language}${tags}${usageInfo}`,
+          detail: `${
+            snippet.description || "No description"
+          }\n\n${codePreview}`,
+          snippet,
+        };
+      });
+
+      // Show quick pick
+      const selected = await vscode.window.showQuickPick(quickPickItems, {
+        placeHolder:
+          "Select a snippet to insert immediately (Press Enter to insert)",
+        matchOnDescription: true,
+        matchOnDetail: true,
+        ignoreFocusOut: false,
+      });
+
+      if (!selected) {
+        return; // User cancelled
+      }
+
+      // Insert immediately without preview
+      await this.insertSnippetAtCursor(
+        editor,
+        selected.snippet,
+        originalPosition
+      );
+
+      // Increment usage count
+      await this.snippetManager.incrementUsage(selected.snippet.id);
+
+      // Show success message
+      vscode.window.showInformationMessage(
+        `Inserted "${selected.snippet.title}" • Press Ctrl+Z to undo`
+      );
+    } catch (error) {
+      console.error("Error in quick insert:", error);
+      vscode.window.showErrorMessage(
+        `Error inserting snippet: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
+    }
   }
 
   /**
@@ -1542,19 +1683,56 @@ export class CommandHandler {
    */
   private async insertSnippetAtCursor(
     editor: vscode.TextEditor,
-    snippet: SnippetInterface
+    snippet: SnippetInterface,
+    position?: vscode.Position
   ): Promise<void> {
-    const position = editor.selection.active;
+    // Use provided position or current cursor position
+    const insertPosition = position || editor.selection.active;
+
+    // Verify editor is still valid and active
+    if (editor !== vscode.window.activeTextEditor) {
+      throw new Error("Editor is no longer active. Please try again.");
+    }
 
     // Convert snippet code to VS Code snippet format with tab stops and placeholders
     const processedCode = this.processSnippetCode(
       snippet.code,
       editor,
-      position
+      insertPosition
     );
     const snippetString = new vscode.SnippetString(processedCode);
 
-    await editor.insertSnippet(snippetString, position);
+    // Set cursor to the insertion position before inserting
+    editor.selection = new vscode.Selection(insertPosition, insertPosition);
+
+    await editor.insertSnippet(snippetString, insertPosition);
+  }
+
+  /**
+   * Ensure the original editor is active before insertion
+   */
+  private async ensureOriginalEditorActive(
+    originalDocument: vscode.TextDocument,
+    originalPosition: vscode.Position
+  ): Promise<void> {
+    // Check if the original document is still open
+    const editors = vscode.window.visibleTextEditors;
+    const targetEditor = editors.find((e) => e.document === originalDocument);
+
+    if (targetEditor) {
+      // Show the original document
+      await vscode.window.showTextDocument(originalDocument, {
+        viewColumn: targetEditor.viewColumn,
+        preserveFocus: false,
+        selection: new vscode.Range(originalPosition, originalPosition),
+      });
+    } else {
+      // Document was closed, reopen it
+      await vscode.window.showTextDocument(originalDocument, {
+        preserveFocus: false,
+        selection: new vscode.Range(originalPosition, originalPosition),
+      });
+    }
   }
 
   /**

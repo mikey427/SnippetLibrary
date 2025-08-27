@@ -3,6 +3,8 @@ import cors from "cors";
 import { Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import multer from "multer";
+import * as path from "path";
+import * as fs from "fs";
 import { SnippetManager } from "../../interfaces/SnippetManager";
 import {
   Snippet,
@@ -91,6 +93,23 @@ export class WebGUIServer {
   }
 
   private setupRoutes(): void {
+    // Serve static files from the client build directory
+    const clientBuildPath = path.join(__dirname, "../../client/build");
+
+    // Try to serve static files if build directory exists
+    try {
+      if (fs.existsSync(clientBuildPath)) {
+        this.app.use(express.static(clientBuildPath));
+        console.log("Serving React app from:", clientBuildPath);
+      } else {
+        console.warn(
+          "Client build directory not found, serving basic HTML instead"
+        );
+      }
+    } catch (error) {
+      console.warn("Error setting up static file serving:", error);
+    }
+
     // Health check endpoint
     this.app.get("/health", (req: Request, res: Response) => {
       res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -134,6 +153,9 @@ export class WebGUIServer {
     this.app.get("/api/snippets/:id", this.getSnippet.bind(this));
     this.app.put("/api/snippets/:id", this.updateSnippet.bind(this));
     this.app.delete("/api/snippets/:id", this.deleteSnippet.bind(this));
+
+    // Serve React app for all non-API routes (SPA fallback)
+    this.app.get("*", this.serveFrontend.bind(this));
   }
 
   private setupErrorHandling(): void {
@@ -156,6 +178,227 @@ export class WebGUIServer {
         });
       }
     );
+  }
+
+  // Frontend serving method
+  private serveFrontend(req: Request, res: Response): void {
+    const clientBuildPath = path.join(__dirname, "../../client/build");
+    const indexPath = path.join(clientBuildPath, "index.html");
+
+    // Check if built React app exists
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      // Serve a basic HTML page with snippet management interface
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Snippet Library - Web GUI</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              margin: 0;
+              padding: 20px;
+              background-color: #f5f5f5;
+            }
+            .container {
+              max-width: 1200px;
+              margin: 0 auto;
+              background: white;
+              padding: 30px;
+              border-radius: 8px;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            h1 {
+              color: #333;
+              margin-bottom: 20px;
+            }
+            .status {
+              background: #e8f5e8;
+              border: 1px solid #4caf50;
+              padding: 15px;
+              border-radius: 4px;
+              margin-bottom: 20px;
+            }
+            .api-info {
+              background: #f0f8ff;
+              border: 1px solid #2196f3;
+              padding: 15px;
+              border-radius: 4px;
+              margin-bottom: 20px;
+            }
+            .endpoint {
+              font-family: 'Courier New', monospace;
+              background: #f4f4f4;
+              padding: 8px;
+              border-radius: 3px;
+              margin: 5px 0;
+            }
+            .note {
+              background: #fff3cd;
+              border: 1px solid #ffc107;
+              padding: 15px;
+              border-radius: 4px;
+              margin-top: 20px;
+            }
+            button {
+              background: #007acc;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin: 5px;
+            }
+            button:hover {
+              background: #005a9e;
+            }
+            .snippets-container {
+              margin-top: 20px;
+            }
+            .snippet-item {
+              border: 1px solid #ddd;
+              padding: 15px;
+              margin: 10px 0;
+              border-radius: 4px;
+              background: #fafafa;
+            }
+            .snippet-title {
+              font-weight: bold;
+              color: #333;
+            }
+            .snippet-meta {
+              color: #666;
+              font-size: 0.9em;
+              margin: 5px 0;
+            }
+            .snippet-code {
+              background: #f8f8f8;
+              border: 1px solid #e0e0e0;
+              padding: 10px;
+              border-radius: 3px;
+              font-family: 'Courier New', monospace;
+              white-space: pre-wrap;
+              margin-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>🚀 Snippet Library - Web GUI</h1>
+            
+            <div class="status">
+              ✅ <strong>Server Status:</strong> Running on http://${req.get(
+                "host"
+              )}
+            </div>
+
+            <div class="api-info">
+              <h3>📡 Available API Endpoints:</h3>
+              <div class="endpoint">GET /api/snippets - Get all snippets</div>
+              <div class="endpoint">POST /api/snippets - Create new snippet</div>
+              <div class="endpoint">GET /api/snippets/:id - Get specific snippet</div>
+              <div class="endpoint">PUT /api/snippets/:id - Update snippet</div>
+              <div class="endpoint">DELETE /api/snippets/:id - Delete snippet</div>
+              <div class="endpoint">GET /api/snippets/search - Search snippets</div>
+              <div class="endpoint">GET /health - Server health check</div>
+            </div>
+
+            <div>
+              <h3>📋 Quick Actions:</h3>
+              <button onclick="loadSnippets()">Load Snippets</button>
+              <button onclick="testAPI()">Test API</button>
+              <button onclick="showStats()">Show Stats</button>
+            </div>
+
+            <div id="content" class="snippets-container">
+              <p>Click "Load Snippets" to see your snippet collection, or use the VS Code extension to manage snippets.</p>
+            </div>
+
+            <div class="note">
+              <strong>💡 Note:</strong> This is a basic interface. For the full React-based Web GUI, build the client application first:
+              <br><br>
+              <code>cd src/webgui/client && npm install && npm run build</code>
+            </div>
+          </div>
+
+          <script>
+            async function loadSnippets() {
+              try {
+                const response = await fetch('/api/snippets');
+                const snippets = await response.json();
+                
+                const content = document.getElementById('content');
+                if (snippets.success === false) {
+                  content.innerHTML = '<p style="color: red;">Error: ' + snippets.error.message + '</p>';
+                  return;
+                }
+                
+                const snippetData = snippets.data || snippets;
+                
+                if (snippetData.length === 0) {
+                  content.innerHTML = '<p>No snippets found. Create some snippets using the VS Code extension!</p>';
+                  return;
+                }
+                
+                content.innerHTML = '<h3>📝 Your Snippets (' + snippetData.length + '):</h3>' +
+                  snippetData.map(snippet => 
+                    '<div class="snippet-item">' +
+                      '<div class="snippet-title">' + (snippet.title || 'Untitled') + '</div>' +
+                      '<div class="snippet-meta">Language: ' + (snippet.language || 'Unknown') + 
+                      ' | Tags: ' + (snippet.tags ? snippet.tags.join(', ') : 'None') + 
+                      ' | Used: ' + (snippet.usageCount || 0) + ' times</div>' +
+                      (snippet.description ? '<div style="margin: 5px 0; font-style: italic;">' + snippet.description + '</div>' : '') +
+                      '<div class="snippet-code">' + (snippet.code || '').substring(0, 200) + 
+                      (snippet.code && snippet.code.length > 200 ? '...' : '') + '</div>' +
+                    '</div>'
+                  ).join('');
+              } catch (error) {
+                document.getElementById('content').innerHTML = '<p style="color: red;">Error loading snippets: ' + error.message + '</p>';
+              }
+            }
+
+            async function testAPI() {
+              try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                alert('API Test Successful!\\n\\nServer Status: ' + data.status + '\\nTimestamp: ' + data.timestamp);
+              } catch (error) {
+                alert('API Test Failed: ' + error.message);
+              }
+            }
+
+            async function showStats() {
+              try {
+                const response = await fetch('/api/snippets/stats');
+                const stats = await response.json();
+                
+                let message = 'Snippet Library Statistics:\\n\\n';
+                message += 'Total Snippets: ' + stats.total + '\\n';
+                message += 'Total Usage: ' + stats.totalUsage + '\\n';
+                message += 'Languages: ' + Object.keys(stats.languages).length + '\\n';
+                message += 'Tags: ' + Object.keys(stats.tags).length + '\\n';
+                
+                if (stats.mostUsed) {
+                  message += '\\nMost Used: "' + stats.mostUsed.title + '" (' + stats.mostUsed.usageCount + ' times)';
+                }
+                
+                alert(message);
+              } catch (error) {
+                alert('Error loading stats: ' + error.message);
+              }
+            }
+
+            // Auto-load snippets on page load
+            window.addEventListener('load', loadSnippets);
+          </script>
+        </body>
+        </html>
+      `);
+    }
   }
 
   // Route handlers

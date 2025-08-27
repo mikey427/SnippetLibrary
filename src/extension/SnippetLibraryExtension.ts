@@ -112,6 +112,9 @@ export class SnippetLibraryExtension {
       vscode.commands.registerCommand("snippetLibrary.insertSnippet", () =>
         this.commandHandler.insertSnippet()
       ),
+      vscode.commands.registerCommand("snippetLibrary.quickInsertSnippet", () =>
+        this.commandHandler.quickInsertSnippet()
+      ),
       vscode.commands.registerCommand("snippetLibrary.manageSnippets", () =>
         this.commandHandler.manageSnippets()
       ),
