@@ -572,19 +572,3 @@ View logs:
 3. **CQRS**: Separate read/write operations for better performance
 4. **GraphQL**: Replace REST API with GraphQL for better flexibility
 
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- VS Code Extension API documentation and examples
-- React and Redux communities for excellent tooling
-- Open source contributors who provided inspiration and code examples
-- Beta testers who provided valuable feedback during development
-
----
-
-**Happy Coding!** 🚀
-
-For more information, check out the documentation files in this repository.
