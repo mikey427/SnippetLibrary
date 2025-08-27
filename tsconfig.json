@@ -4,7 +4,9 @@
     "target": "ES2020",
     "outDir": "out",
     "lib": [
-      "ES2020"
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
     ],
     "sourceMap": true,
     "rootDir": "src",
@@ -14,7 +16,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": false
   },
   "exclude": [
     "node_modules",
@@ -22,6 +28,9 @@
     "out",
     "dist",
     "vitest.config.ts",
-    "**/*.test.ts"
+    "vitest.config.comprehensive.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**"
   ]
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../store/hooks";
 import { FixedSizeGrid as Grid } from "react-window";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -27,7 +28,7 @@ import {
   clearSelection,
 } from "../../store/slices/snippetsSlice";
 import { addNotification } from "../../store/slices/uiSlice";
-import { Snippet } from "../../../types";
+import { Snippet } from "../../../../types";
 import Button from "../../components/UI/Button";
 import SnippetCard from "./components/SnippetCard";
 import FilterControls from "./components/FilterControls";
@@ -45,7 +46,7 @@ interface FilterState {
 }
 
 const SnippetGrid: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const {
     items: snippets,
     loading,
@@ -283,7 +284,11 @@ const SnippetGrid: React.FC = () => {
         availableLanguages={[...new Set(snippets.map((s) => s.language))]}
         availableTags={[...new Set(snippets.flatMap((s) => s.tags))]}
         availableCategories={[
-          ...new Set(snippets.map((s) => s.category).filter(Boolean)),
+          ...new Set(
+            snippets
+              .map((s) => s.category)
+              .filter((cat): cat is string => Boolean(cat))
+          ),
         ]}
       />
 

@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../../store/hooks";
 import {
   deleteSnippet,
   updateSnippet,
@@ -8,7 +9,7 @@ import {
 } from "../../../store/slices/snippetsSlice";
 import { addNotification } from "../../../store/slices/uiSlice";
 import { RootState } from "../../../store/store";
-import { Snippet } from "../../../../types";
+import { Snippet } from "../../../../../types";
 import Button from "../../../components/UI/Button";
 import "./BulkActions.css";
 import { window } from "vscode";
@@ -36,7 +37,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
   selectedIds,
   onClearSelection,
 }) => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { items: snippets } = useSelector((state: RootState) => state.snippets);
 
   // Operation states
@@ -58,7 +59,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
 
   const handleBulkDelete = useCallback(async () => {
     if (
-      !window.confirm(
+      !(window as any).confirm(
         `Are you sure you want to delete ${selectedIds.length} snippets? This action cannot be undone.`
       )
     ) {

@@ -258,7 +258,7 @@ export class SynchronizationServiceImpl
       this.syncInProgress = true;
 
       // Process pending changes
-      const processedChanges = [];
+      const processedChanges: StorageChange[] = [];
       for (const change of this.pendingChanges) {
         const result = await this.processStorageChange(change);
         if (result.success) {

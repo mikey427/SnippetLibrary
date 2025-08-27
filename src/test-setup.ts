@@ -67,6 +67,22 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
+// Mock window.confirm and other dialog methods
+Object.defineProperty(window, "confirm", {
+  writable: true,
+  value: vi.fn().mockReturnValue(true),
+});
+
+Object.defineProperty(window, "alert", {
+  writable: true,
+  value: vi.fn(),
+});
+
+Object.defineProperty(window, "prompt", {
+  writable: true,
+  value: vi.fn().mockReturnValue("test"),
+});
+
 // Mock fetch globally
 global.fetch = vi.fn();
 

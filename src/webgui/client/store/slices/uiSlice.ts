@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface UIState {
+export interface UIState {
   theme: "light" | "dark";
   sidebarOpen: boolean;
   viewMode: "grid" | "list";
   notifications: Notification[];
 }
 
-interface Notification {
+export interface Notification {
   id: string;
   type: "success" | "error" | "warning" | "info";
   message: string;

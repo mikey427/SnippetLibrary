@@ -4,7 +4,7 @@
  * the VS Code extension and the web GUI
  */
 
-// Export all types
+// Export all types (primary source)
 export * from "../types";
 
 // Export all interfaces
@@ -15,8 +15,10 @@ export * from "../interfaces/StorageService";
 export * from "./utils";
 export * from "./validation";
 
-// Export models
-export * from "./models";
+// Export model classes (renamed to avoid conflicts with type aliases)
+export { Snippet as SnippetModel } from "./models/Snippet";
+export { SearchQuery as SearchQueryModel } from "./models/SearchQuery";
+export { StorageConfig as StorageConfigModel } from "./models/StorageConfig";
 
 // Export services (excluding conflicting names)
 export {

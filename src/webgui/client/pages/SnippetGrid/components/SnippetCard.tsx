@@ -3,7 +3,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Snippet } from "../../../../types";
+import { Snippet } from "../../../../../types";
 import Button from "../../../components/UI/Button";
 import "./SnippetCard.css";
 

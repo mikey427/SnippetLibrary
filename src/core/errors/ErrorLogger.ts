@@ -179,7 +179,19 @@ export class ErrorLogger {
             timestamp: entry.timestamp.toISOString(),
             level: LogLevel[entry.level],
             message: entry.message,
-            error: entry.error?.toJSON(),
+            error: entry.error
+              ? {
+                  type: entry.error.type,
+                  severity: entry.error.severity,
+                  code: entry.error.code,
+                  message: entry.error.message,
+                  details: entry.error.details,
+                  recoverable: entry.error.recoverable,
+                  suggestedAction: entry.error.suggestedAction,
+                  timestamp: entry.error.timestamp,
+                  context: entry.error.context,
+                }
+              : undefined,
             context: entry.context,
             metadata: entry.metadata,
           }) + "\n";

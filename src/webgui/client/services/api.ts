@@ -20,13 +20,13 @@ class SnippetAPI {
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = (await response.json().catch(() => ({}))) as any;
       throw new Error(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`
       );
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   async getAll(): Promise<Snippet[]> {
@@ -78,13 +78,17 @@ class SnippetAPI {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = (await response.json().catch(() => ({}))) as any;
       throw new Error(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`
       );
     }
 
-    return response.json();
+    return response.json() as Promise<{
+      imported: number;
+      skipped: number;
+      errors: string[];
+    }>;
   }
 
   async export(format: "json" | "yaml" = "json"): Promise<Blob> {
@@ -93,7 +97,7 @@ class SnippetAPI {
     );
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = (await response.json().catch(() => ({}))) as any;
       throw new Error(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`
       );

@@ -630,12 +630,14 @@ export class SynchronizationCoordinatorImpl
 
     try {
       // Get the current version from storage
-      const currentSnippet = await this.snippetManager.getSnippet(snippet.id);
-      if (!currentSnippet) return;
+      const currentSnippetResult = await this.snippetManager.getSnippet(
+        snippet.id
+      );
+      if (!currentSnippetResult.success || !currentSnippetResult.data) return;
 
       // Check for conflicts
       const conflict = this.conflictResolver.detectConflict(
-        currentSnippet,
+        currentSnippetResult.data,
         snippet,
         source
       );

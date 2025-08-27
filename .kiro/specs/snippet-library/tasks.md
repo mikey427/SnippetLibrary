@@ -215,6 +215,7 @@
   - _Requirements: All requirements validation_
 
 - [ ] 23. Package and prepare for distribution
+
   - Configure VS Code extension packaging with vsce
   - Create extension marketplace metadata and documentation
   - Set up build scripts for both extension and web GUI

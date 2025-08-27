@@ -725,7 +725,272 @@ export class SnippetManagerImpl implements SnippetManager {
   }
 
   /**
+   * Validate snippet data
+   */
+  validateSnippet(snippet: SnippetData): Result<boolean> {
+    try {
+      // Check required fields
+      if (!snippet.title || snippet.title.trim().length === 0) {
+        return {
+          success: false,
+          error: createError(
+            ErrorType.validation,
+            "Snippet title is required",
+            { snippet },
+            false,
+            "Provide a valid title for the snippet"
+          ),
+        };
+      }
+
+      if (!snippet.code || snippet.code.trim().length === 0) {
+        return {
+          success: false,
+          error: createError(
+            ErrorType.validation,
+            "Snippet code is required",
+            { snippet },
+            false,
+            "Provide valid code for the snippet"
+          ),
+        };
+      }
+
+      if (!snippet.language || snippet.language.trim().length === 0) {
+        return {
+          success: false,
+          error: createError(
+            ErrorType.validation,
+            "Snippet language is required",
+            { snippet },
+            false,
+            "Specify the programming language for the snippet"
+          ),
+        };
+      }
+
+      // Validate title length
+      if (snippet.title.length > 200) {
+        return {
+          success: false,
+          error: createError(
+            ErrorType.validation,
+            "Snippet title is too long",
+            { snippet, maxLength: 200 },
+            false,
+            "Keep the title under 200 characters"
+          ),
+        };
+      }
+
+      // Validate description length if provided
+      if (snippet.description && snippet.description.length > 1000) {
+        return {
+          success: false,
+          error: createError(
+            ErrorType.validation,
+            "Snippet description is too long",
+            { snippet, maxLength: 1000 },
+            false,
+            "Keep the description under 1000 characters"
+          ),
+        };
+      }
+
+      // Validate tags if provided
+      if (snippet.tags) {
+        if (!Array.isArray(snippet.tags)) {
+          return {
+            success: false,
+            error: createError(
+              ErrorType.validation,
+              "Snippet tags must be an array",
+              { snippet },
+              false,
+              "Provide tags as an array of strings"
+            ),
+          };
+        }
+
+        if (snippet.tags.length > 20) {
+          return {
+            success: false,
+            error: createError(
+              ErrorType.validation,
+              "Too many tags",
+              { snippet, maxTags: 20 },
+              false,
+              "Limit tags to 20 or fewer"
+            ),
+          };
+        }
+
+        for (const tag of snippet.tags) {
+          if (typeof tag !== "string" || tag.trim().length === 0) {
+            return {
+              success: false,
+              error: createError(
+                ErrorType.validation,
+                "Invalid tag format",
+                { snippet, invalidTag: tag },
+                false,
+                "All tags must be non-empty strings"
+              ),
+            };
+          }
+
+          if (tag.length > 50) {
+            return {
+              success: false,
+              error: createError(
+                ErrorType.validation,
+                "Tag is too long",
+                { snippet, tag, maxLength: 50 },
+                false,
+                "Keep individual tags under 50 characters"
+              ),
+            };
+          }
+        }
+      }
+
+      return { success: true, data: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: createError(
+          ErrorType.validation,
+          "Failed to validate snippet",
+          { snippet, error: error instanceof Error ? error.message : error },
+          true
+        ),
+      };
+    }
+  }
+
+  /**
    * Get usage statistics
+   */
+  async getUsageStats(): Promise<
+    Result<{
+      totalSnippets: number;
+      totalUsage: number;
+      topUsed: SnippetInterface[];
+    }>
+  > {
+    if (!this.initialized) {
+      return {
+        success: false,
+        error: createError(
+          ErrorType.unknown,
+          "Snippet manager not initialized",
+          {},
+          true,
+          "Call initialize() before using the snippet manager"
+        ),
+      };
+    }
+
+    try {
+      const snippets = Array.from(this.snippets.values());
+      const totalSnippets = snippets.length;
+      const totalUsage = snippets.reduce((sum, s) => sum + s.usageCount, 0);
+      const averageUsage = totalSnippets > 0 ? totalUsage / totalSnippets : 0;
+
+      // Most used snippets (top 10)
+      const mostUsedSnippets = snippets
+        .map((snippet) => ({
+          snippet: snippet.toJSON(),
+          usageCount: snippet.usageCount,
+        }))
+        .sort((a, b) => b.usageCount - a.usageCount)
+        .slice(0, 10);
+
+      // Language distribution
+      const languageCounts = new Map<string, number>();
+      snippets.forEach((snippet) => {
+        const count = languageCounts.get(snippet.language) || 0;
+        languageCounts.set(snippet.language, count + 1);
+      });
+
+      const languageDistribution = Array.from(languageCounts.entries())
+        .map(([language, count]) => ({
+          language,
+          count,
+          percentage: totalSnippets > 0 ? (count / totalSnippets) * 100 : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      // Tag distribution
+      const tagCounts = new Map<string, number>();
+      snippets.forEach((snippet) => {
+        snippet.tags.forEach((tag) => {
+          const count = tagCounts.get(tag) || 0;
+          tagCounts.set(tag, count + 1);
+        });
+      });
+
+      const tagDistribution = Array.from(tagCounts.entries())
+        .map(([tag, count]) => ({
+          tag,
+          count,
+          percentage: totalSnippets > 0 ? (count / totalSnippets) * 100 : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      // Category distribution
+      const categoryCounts = new Map<string, number>();
+      snippets.forEach((snippet) => {
+        if (snippet.category) {
+          const count = categoryCounts.get(snippet.category) || 0;
+          categoryCounts.set(snippet.category, count + 1);
+        }
+      });
+
+      const categoryDistribution = Array.from(categoryCounts.entries())
+        .map(([category, count]) => ({
+          category,
+          count,
+          percentage: totalSnippets > 0 ? (count / totalSnippets) * 100 : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      // Recently created (last 10)
+      const recentlyCreated = snippets
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, 10)
+        .map((s) => s.toJSON());
+
+      // Recently updated (last 10)
+      const recentlyUpdated = snippets
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+        .slice(0, 10)
+        .map((s) => s.toJSON());
+
+      const topUsed = mostUsedSnippets.map((item) => item.snippet);
+
+      const statistics = {
+        totalSnippets,
+        totalUsage,
+        topUsed,
+      };
+
+      return { success: true, data: statistics };
+    } catch (error) {
+      return {
+        success: false,
+        error: createError(
+          ErrorType.unknown,
+          "Failed to get usage statistics",
+          { error: error instanceof Error ? error.message : error },
+          true
+        ),
+      };
+    }
+  }
+
+  /**
+   * Get usage statistics (full version)
    */
   async getUsageStatistics(): Promise<Result<UsageStatistics>> {
     if (!this.initialized) {

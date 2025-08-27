@@ -6,7 +6,7 @@ import {
   addToHistory,
   clearQuery,
 } from "../../store/slices/searchSlice";
-import { SearchQueryInterface } from "../../../types";
+import { SearchQueryInterface } from "../../../../types";
 import Button from "../UI/Button";
 import Input from "../UI/Input";
 import "./SearchInterface.css";
@@ -33,7 +33,7 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({
   const { query, results, loading, error, history } = useAppSelector(
     (state) => state.search
   );
-  const { snippets } = useAppSelector((state) => state.snippets);
+  const { items: snippets } = useAppSelector((state) => state.snippets);
 
   // Local state
   const [isExpanded, setIsExpanded] = useState(!compact);
@@ -127,8 +127,8 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({
     );
   }, [query]);
 
-  const handleTextChange = (value: string) => {
-    dispatch(updateQuery({ text: value }));
+  const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(updateQuery({ text: event.target.value }));
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -417,7 +417,7 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({
                   type="text"
                   placeholder="Add tag and press Enter"
                   value={tagInput}
-                  onChange={setTagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={handleTagInputKeyPress}
                   className="tags-input"
                 />
@@ -555,7 +555,7 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({
               type="text"
               placeholder="Enter search name..."
               value={saveSearchName}
-              onChange={setSaveSearchName}
+              onChange={(e) => setSaveSearchName(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
                   saveCurrentSearch();

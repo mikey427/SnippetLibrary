@@ -137,7 +137,15 @@ export class RetryManager {
 
         // Calculate delay for next attempt
         const delay = this.calculateDelay(attempt, config);
-        attemptRecord.delay = delay;
+
+        // Update the attempt record with the delay (create new object since delay is readonly)
+        const updatedAttemptRecord: RetryAttempt = {
+          ...attemptRecord,
+          delay: delay,
+        };
+
+        // Replace the last attempt record with the updated one
+        attempts[attempts.length - 1] = updatedAttemptRecord;
 
         this.logger.logWarning(
           `${operationName} failed on attempt ${

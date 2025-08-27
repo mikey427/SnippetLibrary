@@ -1715,7 +1715,7 @@ export class CommandHandler {
     const lines = editedContent.split("\n");
 
     // Remove the instruction lines
-    const codeLines = [];
+    const codeLines: string[] = [];
     for (const line of lines) {
       if (line.startsWith("// Add tab stops") || line.startsWith("// Use $0")) {
         break;

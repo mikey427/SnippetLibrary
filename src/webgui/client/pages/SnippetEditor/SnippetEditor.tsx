@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../store/hooks";
 import { createSnippet, updateSnippet } from "../../store/slices/snippetsSlice";
 import { addNotification } from "../../store/slices/uiSlice";
 import { RootState } from "../../store";
@@ -14,12 +15,12 @@ import {
   snippetValidationRules,
   ValidationErrors,
 } from "../../utils/validation";
-import { Snippet } from "../../types/Snippet";
+import { Snippet } from "../../../../types";
 import "./SnippetEditor.css";
 
 const SnippetEditor: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { id } = useParams<{ id: string }>();
   const isEditing = Boolean(id);
 

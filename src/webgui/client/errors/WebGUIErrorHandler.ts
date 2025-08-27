@@ -137,7 +137,7 @@ export class WebGUIErrorHandler {
     ) {
       recoveryActions.push({
         label: "Show Details",
-        action: () => this.showErrorDetails(error),
+        action: async () => this.showErrorDetails(error),
       });
     }
 

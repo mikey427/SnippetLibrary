@@ -1,9 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { Snippet } from "../../../types/Snippet";
-import { SearchQuery } from "../../../types/SearchQuery";
+import { Snippet, SearchQuery } from "../../../../types";
 import { snippetAPI } from "../../services/api";
 
-interface SearchState {
+export interface SearchState {
   query: SearchQuery;
   results: Snippet[];
   loading: boolean;

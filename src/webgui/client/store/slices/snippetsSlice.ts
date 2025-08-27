@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { Snippet } from "../../../types/Snippet";
+import { Snippet } from "../../../../types";
 import { snippetAPI } from "../../services/api";
 
-interface SnippetsState {
+export interface SnippetsState {
   items: Snippet[];
   loading: boolean;
   error: string | null;

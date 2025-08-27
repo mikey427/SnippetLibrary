@@ -6,6 +6,7 @@ import multer from "multer";
 import { SnippetManager } from "../../interfaces/SnippetManager";
 import {
   Snippet,
+  SnippetInterface,
   SearchQuery,
   ImportData,
   ExportData,
@@ -206,9 +207,16 @@ export class WebGUIServer {
   ): Promise<void> {
     try {
       const snippetData = req.body;
-      const snippet = await this.dependencies.snippetManager.createSnippet(
+      const result = await this.dependencies.snippetManager.createSnippet(
         snippetData
       );
+
+      if (!result.success) {
+        res.status(400).json({ error: result.error.message });
+        return;
+      }
+
+      const snippet = result.data;
 
       // Emit real-time update
       this.emitSnippetUpdate("created", snippet);
@@ -234,14 +242,19 @@ export class WebGUIServer {
   ): Promise<void> {
     try {
       const { id } = req.params;
-      const snippet = await this.dependencies.snippetManager.getSnippet(id);
+      const result = await this.dependencies.snippetManager.getSnippet(id);
 
-      if (!snippet) {
+      if (!result.success) {
+        res.status(500).json({ error: result.error.message });
+        return;
+      }
+
+      if (!result.data) {
         res.status(404).json({ error: "Snippet not found" });
         return;
       }
 
-      res.json(snippet);
+      res.json(result.data);
     } catch (error) {
       next(error);
     }
@@ -255,10 +268,17 @@ export class WebGUIServer {
     try {
       const { id } = req.params;
       const updates = req.body;
-      const snippet = await this.dependencies.snippetManager.updateSnippet(
+      const result = await this.dependencies.snippetManager.updateSnippet(
         id,
         updates
       );
+
+      if (!result.success) {
+        res.status(400).json({ error: result.error.message });
+        return;
+      }
+
+      const snippet = result.data;
 
       // Emit real-time update
       this.emitSnippetUpdate("updated", snippet);
@@ -286,23 +306,27 @@ export class WebGUIServer {
       const { id } = req.params;
 
       // Get snippet before deletion for real-time update
-      const snippet = await this.dependencies.snippetManager.getSnippet(id);
+      const snippetResult = await this.dependencies.snippetManager.getSnippet(
+        id
+      );
 
-      const success = await this.dependencies.snippetManager.deleteSnippet(id);
+      const deleteResult = await this.dependencies.snippetManager.deleteSnippet(
+        id
+      );
 
-      if (!success) {
+      if (!deleteResult.success) {
         res.status(404).json({ error: "Snippet not found" });
         return;
       }
 
       // Emit real-time update
-      if (snippet) {
-        this.emitSnippetUpdate("deleted", snippet);
+      if (snippetResult.success && snippetResult.data) {
+        this.emitSnippetUpdate("deleted", snippetResult.data);
 
         // Notify synchronization coordinator
         if (this.dependencies.syncCoordinator) {
           await this.dependencies.syncCoordinator.handleWebGUIUpdate(
-            snippet,
+            snippetResult.data,
             "deleted"
           );
         }
@@ -450,7 +474,9 @@ export class WebGUIServer {
       );
 
       // Emit real-time update for bulk import
-      this.emitBulkUpdate("imported", result.imported);
+      if (result.success) {
+        this.emitBulkUpdate("imported", result.data.imported);
+      }
 
       res.json(result);
     } catch (error) {
@@ -470,7 +496,9 @@ export class WebGUIServer {
       );
 
       // Emit real-time update for bulk import
-      this.emitBulkUpdate("imported", result.imported);
+      if (result.success) {
+        this.emitBulkUpdate("imported", result.data.imported);
+      }
 
       res.json(result);
     } catch (error) {
@@ -619,9 +647,15 @@ export class WebGUIServer {
     next: NextFunction
   ): Promise<void> {
     try {
-      const allSnippets = await this.dependencies.snippetManager.searchSnippets(
-        {}
-      );
+      const allSnippetsResult =
+        await this.dependencies.snippetManager.searchSnippets({});
+
+      if (!allSnippetsResult.success) {
+        res.status(500).json({ error: allSnippetsResult.error.message });
+        return;
+      }
+
+      const allSnippets = allSnippetsResult.data;
 
       const stats = {
         total: allSnippets.length,
@@ -629,7 +663,7 @@ export class WebGUIServer {
         tags: {} as Record<string, number>,
         categories: {} as Record<string, number>,
         totalUsage: 0,
-        mostUsed: null as Snippet | null,
+        mostUsed: null as SnippetInterface | null,
         recentlyCreated: allSnippets
           .sort(
             (a, b) =>

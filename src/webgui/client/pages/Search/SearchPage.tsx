@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAppSelector } from "../../store/hooks";
 import { SearchInterface } from "../../components/Search";
 import SnippetCard from "../SnippetGrid/components/SnippetCard";
-import { Snippet } from "../../../types";
+import { Snippet } from "../../../../types";
 import "./SearchPage.css";
 
 const SearchPage: React.FC = () => {
@@ -45,11 +45,11 @@ const SearchPage: React.FC = () => {
                   <SnippetCard
                     key={snippet.id}
                     snippet={snippet}
-                    isSelected={false}
+                    selected={false}
+                    viewMode="grid"
                     onSelect={() => {}}
                     onEdit={() => {}}
                     onDelete={() => {}}
-                    searchTerm=""
                   />
                 ))
               ) : (
